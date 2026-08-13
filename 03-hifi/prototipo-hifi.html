@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestor Job — Protótipo Hi-Fi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --moss: #204038;
+      --moss-soft: #e6efec;
+      --moss-mid: #3a6358;
+      --orange: #F06820;
+      --orange-soft: #fff0e8;
+      --ink: #1a2220;
+      --muted: #5a6561;
+      --faint: #8a948f;
+      --line: #d5ddd9;
+      --line-strong: #b7c2bd;
+      --bg: #f3f6f4;
+      --surface: #ffffff;
+      --warn: #b86a14;
+      --warn-soft: #fff4e5;
+      --danger: #b42318;
+      --danger-soft: #fdecea;
+      --radius: 10px;
+      --font: "Nunito", system-ui, sans-serif;
+      --sidebar: 240px;
+      --top: 56px;
+      --shadow: 0 10px 30px rgba(26,34,32,.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.4;
+    }
+    button, input, select, textarea { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+    .hidden { display: none !important; }
+
+    /* Auth layouts */
+    .auth-screen {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 28px 16px;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 20%, rgba(32,64,56,.12), transparent 55%),
+        radial-gradient(ellipse 50% 45% at 90% 80%, rgba(240,104,32,.12), transparent 50%),
+        var(--bg);
+    }
+    .auth-card {
+      width: min(420px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 28px 26px 24px;
+      box-shadow: var(--shadow);
+    }
+    .auth-card.wide { width: min(720px, 100%); }
+    .brand-block { text-align: center; margin-bottom: 22px; }
+    .brand-block img { max-width: 280px; width: 100%; height: auto; }
+    .brand-mark {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 1.35rem; line-height: 1;
+    }
+    .brand-mark .g { color: var(--moss); font-weight: 500; }
+    .brand-mark .j { color: var(--orange); font-weight: 800; }
+    .brand-mark .curve {
+      width: 3px; height: 1.4em; border-radius: 999px; background: var(--moss);
+      transform: rotate(12deg);
+    }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .field input, .field select, .field textarea {
+      width: 100%; border: 1px solid var(--line-strong); border-radius: 8px;
+      padding: 10px 12px; background: #fff; color: var(--ink);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: 2px solid color-mix(in srgb, var(--orange) 45%, white);
+      border-color: var(--orange);
+    }
+    .field textarea { min-height: 80px; resize: vertical; }
+    .btn {
+      appearance: none; border: 0; cursor: pointer;
+      border-radius: 999px; padding: 10px 16px; font-weight: 700; font-size: .9rem;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary { background: var(--orange); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.05); }
+    .btn-secondary { background: var(--moss); color: #fff; }
+    .btn-ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--moss); }
+    .btn-danger { background: var(--danger-soft); color: var(--danger); border: 1px solid #f0b4b0; }
+    .btn-sm { padding: 6px 12px; font-size: .8rem; }
+    .btn-block { width: 100%; }
+    .linkish { color: var(--orange); font-weight: 700; font-size: .85rem; cursor: pointer; background: none; border: 0; padding: 0; }
+    .muted { color: var(--muted); }
+    .faint { color: var(--faint); }
+    .small { font-size: .85rem; }
+    .tiny { font-size: .75rem; }
+    .stack { display: flex; flex-direction: column; gap: 12px; }
+    .stack-sm { display: flex; flex-direction: column; gap: 8px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .grow { flex: 1; }
+    .spacer { flex: 1; }
+
+    /* App shell */
+    .app { display: none; min-height: 100%; }
+    .app.on { display: grid; grid-template-columns: var(--sidebar) 1fr; }
+    .sidebar {
+      background: var(--moss);
+      color: #e8f0ed;
+      min-height: 100vh;
+      position: sticky; top: 0; height: 100vh;
+      display: flex; flex-direction: column;
+      padding: 16px 12px;
+    }
+    .sidebar .logo-link {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px 16px; border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 12px;
+    }
+    .sidebar .logo-link img { height: 36px; width: auto; filter: brightness(1.15); }
+    .nav-sec {
+      font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.45); font-weight: 700; padding: 10px 10px 4px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 10px; border-radius: 8px; color: rgba(255,255,255,.82);
+      font-weight: 600; font-size: .9rem; cursor: pointer; border: 0; background: transparent; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .nav-item.active { background: rgba(240,104,32,.95); color: #fff; }
+    .nav-item .phase3 {
+      margin-left: auto; font-size: .62rem; letter-spacing: .04em;
+      background: rgba(255,255,255,.15); padding: 2px 6px; border-radius: 999px;
+    }
+    .sidebar-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+    .main { min-width: 0; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      height: var(--top); background: var(--surface); border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 10px; padding: 0 16px;
+      position: sticky; top: 0; z-index: 20;
+    }
+    .topbar .search {
+      flex: 1; max-width: 360px; border: 1px solid var(--line); border-radius: 999px;
+      padding: 8px 14px; background: var(--bg);
+    }
+    .content { padding: 18px 18px 40px; }
+    .view { display: none; animation: fadeIn .25s ease; }
+    .view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    .page-h {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .page-h h1 { margin: 0; font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: var(--moss); }
+    .page-h p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: .72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+      border: 1px solid var(--line-strong); background: #f7f9f8; color: var(--muted);
+    }
+    .pill.on { background: var(--moss-soft); border-color: #b7d0c6; color: var(--moss); }
+    .pill.action {
+      background: var(--orange-soft); border-color: #f5c4a4; color: var(--orange);
+    }
+    .pill.action.live::before {
+      content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--orange);
+      animation: pulse 1.4s ease infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.85); } }
+    .pill.danger { background: var(--danger-soft); border-color: #f0b4b0; color: var(--danger); }
+    .pill.warn { background: var(--warn-soft); border-color: #f0d2a0; color: var(--warn); }
+    .pill.ghost { background: transparent; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    }
+    .card-h {
+      padding: 11px 14px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      font-weight: 700; font-size: .9rem; color: var(--moss);
+    }
+    .card-b { padding: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 1000px) {
+      .app.on { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; min-height: 0; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+
+    .stat {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 14px; cursor: default;
+    }
+    .stat.clickable { cursor: pointer; }
+    .stat.clickable:hover { border-color: var(--orange); }
+    .stat .v { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: var(--moss); }
+    .stat .l { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+    .stat.action .v { color: var(--orange); }
+    .stat.danger .v { color: var(--danger); }
+    .stat.warn .v { color: var(--warn); }
+
+    table.data { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    table.data th, table.data td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+    table.data th { font-size: .75rem; color: var(--muted); background: #f4f7f5; font-weight: 700; }
+    table.data tr:hover td { background: #fafcfb; }
+    table.data tr.clickable { cursor: pointer; }
+    .right { text-align: right !important; }
+    .tone::before {
+      content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      margin-right: 7px; background: var(--line-strong); vertical-align: middle;
+    }
+    .tone.ok::before { background: var(--moss); }
+    .tone.warn::before { background: var(--warn); }
+    .tone.danger::before { background: var(--danger); }
+
+    /* Kanban */
+    .view-toggle { display: inline-flex; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+    .view-toggle button {
+      border: 0; background: transparent; padding: 6px 12px; border-radius: 999px;
+      font-weight: 700; font-size: .8rem; color: var(--muted); cursor: pointer;
+    }
+    .view-toggle button.active { background: var(--surface); color: var(--moss); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .board {
+      display: grid; grid-template-columns: repeat(6, minmax(180px, 1fr));
+      gap: 10px; overflow-x: auto; padding-bottom: 8px;
+    }
+    .col { min-width: 180px; }
+    .col-title {
+      display: flex; gap: 6px; align-items: baseline; margin-bottom: 8px;
+      font-size: .82rem; font-weight: 800; color: var(--moss);
+    }
+    .col-title span { color: var(--faint); font-weight: 600; }
+    .kcard {
+      width: 100%; text-align: left; border: 1px solid var(--line-strong);
+      border-radius: 8px; padding: 10px; background: var(--surface); margin-bottom: 8px;
+      cursor: pointer; transition: border-color .15s, transform .15s;
+    }
+    .kcard:hover { border-color: var(--moss-mid); transform: translateY(-1px); }
+    .kcard.late { border-color: var(--danger); box-shadow: inset 3px 0 0 var(--danger); }
+    .kcard .t { font-size: .86rem; font-weight: 700; display: flex; gap: 6px; align-items: center; }
+    .kcard .m { font-size: .75rem; color: var(--faint); margin-top: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; background: var(--line-strong); }
+    .dot.urgente { background: var(--danger); }
+    .dot.alta { background: var(--warn); }
+    .dot.media { background: var(--moss); }
+    .dot.baixa { background: var(--line-strong); }
+
+    /* Drawer */
+    .drawer-root {
+      position: fixed; inset: 0; z-index: 50; display: none;
+      background: rgba(26,34,32,.35); backdrop-filter: blur(2px);
+    }
+    .drawer-root.open { display: block; }
+    .drawer {
+      position: absolute; top: 0; right: 0; height: 100%; width: min(560px, 100%);
+      background: var(--surface); box-shadow: -12px 0 40px rgba(0,0,0,.12);
+      display: flex; flex-direction: column;
+      animation: slideIn .28s ease;
+    }
+    @keyframes slideIn { from { transform: translateX(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+    .drawer-head {
+      padding: 14px 16px; border-bottom: 1px solid var(--line);
+      display: flex; gap: 8px; align-items: center;
+    }
+    .drawer-body {
+      flex: 1; overflow: auto; display: grid; grid-template-columns: 1.15fr .95fr;
+    }
+    .drawer-body > div { padding: 14px; }
+    .drawer-body > div:first-child { border-right: 1px solid var(--line); }
+    @media (max-width: 700px) {
+      .drawer-body { grid-template-columns: 1fr; }
+      .drawer-body > div:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
+    .check-item {
+      display: flex; gap: 8px; align-items: flex-start; padding: 6px 0;
+      font-size: .88rem; border-bottom: 1px solid var(--line);
+    }
+    .check-item:last-child { border-bottom: 0; }
+    .check-item input { margin-top: 3px; accent-color: var(--orange); }
+    .cost-box {
+      border: 1px solid var(--moss); background: var(--moss-soft);
+      border-radius: 8px; padding: 12px;
+    }
+    .cost-box strong { font-size: 1.25rem; color: var(--moss); }
+
+    /* Modal */
+    .modal-root {
+      position: fixed; inset: 0; z-index: 60; display: none;
+      background: rgba(26,34,32,.4); place-items: center; padding: 16px;
+    }
+    .modal-root.open { display: grid; }
+    .modal {
+      width: min(520px, 100%); background: var(--surface); border-radius: 14px;
+      border: 1px solid var(--line); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .modal.wide { width: min(720px, 100%); }
+    .modal-h {
+      padding: 14px 16px; border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--moss);
+    }
+    .modal-b { padding: 16px; }
+    .modal-f { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* Wizard */
+    .wizard-steps { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+    .wizard-steps .ws {
+      flex: 1; min-width: 90px; text-align: center; padding: 8px 6px;
+      border-radius: 8px; font-size: .75rem; font-weight: 700; color: var(--faint);
+      background: var(--bg); border: 1px solid var(--line); position: relative;
+    }
+    .wizard-steps .ws.done { color: var(--moss); background: var(--moss-soft); border-color: #b7d0c6; }
+    .wizard-steps .ws.now { color: var(--orange); background: var(--orange-soft); border-color: #f5c4a4; }
+    .wizard-steps .ws.now::after {
+      content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+      width: 3px; height: 14px; border-radius: 999px;
+      background: linear-gradient(180deg, var(--moss), var(--orange));
+    }
+
+    /* Calendar */
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    }
+    .cal-cell {
+      min-height: 88px; background: var(--surface); border: 1px solid var(--line);
+      border-radius: 8px; padding: 6px; font-size: .75rem;
+    }
+    .cal-cell .d { font-weight: 800; color: var(--moss); margin-bottom: 4px; }
+    .cal-cell .ev {
+      background: var(--orange-soft); color: var(--orange); border-radius: 4px;
+      padding: 2px 4px; margin-bottom: 3px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cal-cell.head { min-height: 0; background: transparent; border: 0; font-weight: 800; color: var(--muted); text-align: center; }
+
+    /* Notify panel */
+    .notif-panel {
+      position: absolute; right: 12px; top: calc(var(--top) + 6px);
+      width: min(340px, calc(100vw - 24px)); background: var(--surface);
+      border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+      z-index: 30; display: none; overflow: hidden;
+    }
+    .notif-panel.open { display: block; }
+    .notif-item { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: .85rem; }
+    .notif-item:last-child { border-bottom: 0; }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--moss-soft);
+      color: var(--moss); display: grid; place-items: center; font-weight: 800; font-size: .8rem;
+      border: 1px solid #b7d0c6; cursor: pointer;
+    }
+    .persona-select {
+      border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.15);
+      color: #fff; border-radius: 8px; padding: 7px 8px; width: 100%; font-size: .8rem; font-weight: 600;
+    }
+    .bar { height: 8px; background: #e6ebe8; border-radius: 999px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; background: var(--moss); border-radius: 999px; }
+    .bar.warn > i { background: var(--warn); }
+    .bar.danger > i { background: var(--danger); }
+    .bar.action > i { background: var(--orange); }
+    .empty {
+      text-align: center; padding: 48px 20px;
+      border: 1px dashed var(--line-strong); border-radius: 14px; background: var(--surface);
+    }
+    .empty .arc {
+      width: 4px; height: 56px; margin: 0 auto 14px; border-radius: 999px;
+      background: linear-gradient(180deg, var(--moss), var(--orange));
+    }
+    .callout {
+      border: 1px solid var(--line); border-left: 3px solid var(--moss);
+      background: var(--surface); border-radius: 8px; padding: 12px 14px; font-size: .9rem;
+    }
+    .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .callout.danger { border-left-color: var(--danger); background: var(--danger-soft); }
+    .callout.action { border-left-color: var(--orange); background: var(--orange-soft); }
+    .badge-phase3 {
+      font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+      background: var(--warn-soft); color: var(--warn); border: 1px solid #f0d2a0;
+      padding: 2px 8px; border-radius: 999px;
+    }
+    .sitemap a {
+      display: inline-block; margin: 3px 4px 3px 0; padding: 4px 10px;
+      background: var(--moss-soft); color: var(--moss); border-radius: 999px;
+      font-size: .78rem; font-weight: 700;
+    }
+    .sitemap a:hover { background: var(--orange-soft); color: var(--orange); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
+    .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+    .seg button {
+      border: 0; background: transparent; padding: 6px 12px; font-size: .8rem; font-weight: 700;
+      color: var(--muted); cursor: pointer;
+    }
+    .seg button.on { background: var(--moss); color: #fff; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line);
+      background: var(--surface); cursor: pointer; display: grid; place-items: center;
+      color: var(--moss); font-weight: 800;
+    }
+    .icon-btn:hover { border-color: var(--orange); color: var(--orange); }
+    .demo-banner {
+      background: linear-gradient(90deg, var(--moss), var(--moss-mid));
+      color: #fff; font-size: .78rem; font-weight: 600; padding: 6px 14px;
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    .demo-banner a { color: #ffd2b8; font-weight: 800; }
+    .wl-preview {
+      height: 120px; border-radius: 12px; border: 1px solid var(--line);
+      display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- DEMO BANNER -->
+  <div class="demo-banner" id="demo-banner">
+    <span>Protótipo hi-fi · Gestor Job</span>
+    <a href="identidade-visual.html">Identidade visual</a>
+    <a href="#/sitemap">Mapa de telas</a>
+    <span class="spacer"></span>
+    <span id="demo-flow-hint">Fluxos: onboarding → operação → margem</span>
+  </div>
+
+  <!-- AUTH SCREENS -->
+  <div id="auth-root">
+    <div class="auth-screen" data-auth="login">
+      <div class="auth-card">
+        <div class="brand-block">
+          <img src="assets/brand/logo-opcao-1.png" alt="Gestor Job" />
+        </div>
+        <div class="field"><label>E-mail</label><input type="email" value="ana@agenciaeduc.com.br" /></div>
+        <div class="field"><label>Senha</label><input type="password" value="••••••••" /></div>
+        <button class="btn btn-primary btn-block" type="button" data-go="#/kanban">Entrar</button>
+        <div class="row" style="margin-top:14px;justify-content:space-between">
+          <button class="linkish" type="button" data-go="#/recuperar">Esqueci a senha</button>
+          <button class="linkish" type="button" data-go="#/convite">Aceitar convite</button>
+        </div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)" class="stack-sm">
+          <div class="tiny faint">Atalhos de demo</div>
+          <div class="row">
+            <button class="btn btn-ghost btn-sm" type="button" data-go="#/super/tenants" data-persona="super">Super Admin</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-go="#/wizard/1" data-persona="admin">Wizard onboarding</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-go="#/portal" data-persona="viewer">Portal cliente</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-screen hidden" data-auth="convite">
+      <div class="auth-card">
+        <div class="brand-block">
+          <div class="brand-mark"><span class="g">Gestor</span><span class="curve"></span><span class="j">Job</span></div>
+          <p class="small muted" style="margin:10px 0 0">Convite para <strong>Agência Educ</strong></p>
+        </div>
+        <div class="field"><label>Seu nome</label><input value="Mariana Costa" /></div>
+        <div class="field"><label>Nova senha</label><input type="password" value="••••••••" /></div>
+        <div class="field"><label>Confirmar senha</label><input type="password" value="••••••••" /></div>
+        <button class="btn btn-primary btn-block" type="button" data-go="#/wizard/1" data-persona="admin">Ativar conta e continuar</button>
+        <div style="margin-top:12px;text-align:center"><button class="linkish" type="button" data-go="#/login">Voltar ao login</button></div>
+      </div>
+    </div>
+
+    <div class="auth-screen hidden" data-auth="recuperar">
+      <div class="auth-card">
+        <div class="brand-block">
+          <div class="brand-mark"><span class="g">Gestor</span><span class="curve"></span><span class="j">Job</span></div>
+          <p class="small muted" style="margin:10px 0 0">Recuperar senha</p>
+        </div>
+        <div class="field"><label>E-mail cadastrado</label><input type="email" placeholder="voce@agencia.com" /></div>
+        <button class="btn btn-primary btn-block" type="button" data-go="#/recuperar-ok">Enviar link</button>
+        <div style="margin-top:12px;text-align:center"><button class="linkish" type="button" data-go="#/login">Voltar</button></div>
+      </div>
+    </div>
+
+    <div class="auth-screen hidden" data-auth="recuperar-ok">
+      <div class="auth-card" style="text-align:center">
+        <div class="empty" style="border:0;padding:8px">
+          <div class="arc"></div>
+          <h2 style="margin:0 0 8px;color:var(--moss)">Link enviado</h2>
+          <p class="muted small">Confira sua caixa de entrada e defina uma nova senha.</p>
+          <button class="btn btn-secondary" type="button" data-go="#/login">Voltar ao login</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-screen hidden" data-auth="wizard">
+      <div class="auth-card wide">
+        <div class="row" style="margin-bottom:8px">
+          <div class="brand-mark"><span class="g">Gestor</span><span class="curve"></span><span class="j">Job</span></div>
+          <span class="spacer"></span>
+          <span class="pill on">Onboarding · Agência Educ</span>
+        </div>
+        <p class="small muted" style="margin-top:0">Configure o essencial para liberar o Kanban. Organize agora — o job fica descomplicado depois.</p>
+        <div class="wizard-steps" id="wizard-steps"></div>
+        <div id="wizard-body"></div>
+        <div class="row" style="margin-top:16px;justify-content:space-between">
+          <button class="btn btn-ghost" type="button" id="wizard-prev">Voltar</button>
+          <button class="btn btn-primary" type="button" id="wizard-next">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="logo-link" href="#/kanban" title="Gestor Job">
+        <div class="brand-mark" style="font-size:1.15rem;color:#fff">
+          <span class="g" style="color:#dce8e4">Gestor</span>
+          <span class="curve" style="background:#F06820"></span>
+          <span class="j">Job</span>
+        </div>
+      </a>
+      <div id="nav-root"></div>
+      <div class="sidebar-foot">
+        <div class="tiny" style="opacity:.65;margin-bottom:6px;padding:0 4px">Persona demo</div>
+        <select class="persona-select" id="persona-select">
+          <option value="admin">Admin da agência</option>
+          <option value="manager">Gerente</option>
+          <option value="collab">Colaborador</option>
+          <option value="viewer">Visualizador</option>
+          <option value="super">Super Admin</option>
+        </select>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <input class="search" id="global-search" placeholder="Buscar tarefas, clientes…" />
+        <div class="seg" id="task-view-seg" class="hidden">
+          <button type="button" data-viewmode="kanban" class="on">Kanban</button>
+          <button type="button" data-viewmode="lista">Lista</button>
+          <button type="button" data-viewmode="calendario">Calendário</button>
+        </div>
+        <span class="spacer"></span>
+        <button class="btn btn-primary btn-sm" type="button" id="btn-new-task">+ Tarefa</button>
+        <button class="icon-btn" type="button" id="btn-notif" title="Notificações">🔔</button>
+        <div class="avatar" id="btn-profile" title="Perfil">MC</div>
+        <div class="notif-panel" id="notif-panel">
+          <div class="card-h">Notificações</div>
+          <div class="notif-item"><strong>Prazo hoje</strong><div class="tiny faint">Reels — Cliente Educ · 18h</div></div>
+          <div class="notif-item"><strong>Movido para Em revisão</strong><div class="tiny faint">Folder — Cliente A · Bruno</div></div>
+          <div class="notif-item"><strong>Margem em atenção</strong><div class="tiny faint">Cliente C · −R$ 650 no mês</div></div>
+        </div>
+      </header>
+      <div class="content" id="content"></div>
+    </div>
+  </div>
+
+  <!-- DRAWER -->
+  <div class="drawer-root" id="drawer-root">
+    <div class="drawer" id="drawer"></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-root" id="modal-root">
+    <div class="modal" id="modal"></div>
+  </div>
+
+  <script>
+  (() => {
+    const COLUMNS = [
+      { id: "a_fazer", label: "A fazer" },
+      { id: "execucao", label: "Em execução" },
+      { id: "revisao", label: "Em revisão" },
+      { id: "cliente", label: "Aguardando cliente" },
+      { id: "aprovado", label: "Aprovado" },
+      { id: "concluido", label: "Concluído" },
+    ];
+
+    const WIZARD = [
+      { id: 1, title: "Serviços", hint: "Cadastre os serviços que a agência vende." },
+      { id: 2, title: "Equipe", hint: "Convide colaboradores e defina custo/hora." },
+      { id: 3, title: "Clientes", hint: "Inclua clientes com fee mensal." },
+      { id: 4, title: "Feriados", hint: "Calendário institucional do tenant." },
+      { id: 5, title: "Permissões", hint: "Ajuste o que cada role pode fazer." },
+    ];
+
+    const state = {
+      persona: "admin",
+      emptyKanban: false,
+      wizardStep: 1,
+      selectedTaskId: null,
+      timerPhase: "Producao",
+      timerSeconds: 42 * 60 + 18,
+      notifOpen: false,
+      profileOpen: false,
+      tasks: [
+        { id: 1, title: "Reels — Cliente Educ", client: "Educ", service: "Reels Instagram", status: "execucao", priority: "urgente", due: "Hoje 18h", late: false, owners: ["Ana"], phase: "Producao", hours: 2.67, costHour: 70, checklist: [["Briefing", true], ["Arte", true], ["Copy", false], ["Revisão", false], ["Agendar", false]], briefing: "Formato 9:16 · tom leve · CTA link bio." },
+        { id: 2, title: "Carrossel — Cliente A", client: "Cliente A", service: "Carrossel", status: "a_fazer", priority: "alta", due: "Amanhã", late: false, owners: ["Bruno"], phase: null, hours: 0, costHour: 65, checklist: [["Briefing", false], ["Arte", false], ["Copy", false]], briefing: "3 slides · promoção Q3." },
+        { id: 3, title: "Folder mensal — Cliente C", client: "Cliente C", service: "Folder", status: "revisao", priority: "media", due: "Ontem", late: true, owners: ["Ana", "Bruno"], phase: "Revisao", hours: 62, costHour: 75, checklist: [["Layout", true], ["Revisão interna", true], ["Ajustes", false]], briefing: "Kit institucional 12 páginas." },
+        { id: 4, title: "Stories — Cliente B", client: "Cliente B", service: "Stories", status: "cliente", priority: "media", due: "Sex", late: false, owners: ["Ana"], phase: null, hours: 4.5, costHour: 70, checklist: [["Arte", true], ["Copy", true]], briefing: "Aguardando OK do cliente." },
+        { id: 5, title: "Post feed — Cliente Educ", client: "Educ", service: "Post feed", status: "aprovado", priority: "baixa", due: "Seg", late: false, owners: ["Carla"], phase: null, hours: 3, costHour: 55, checklist: [["Arte", true], ["Agendar", false]], briefing: "Publicar terça." },
+        { id: 6, title: "Landing — Cliente A", client: "Cliente A", service: "Landing page", status: "concluido", priority: "alta", due: "Concluído", late: false, owners: ["Bruno"], phase: null, hours: 18, costHour: 65, checklist: [["Wire", true], ["UI", true], ["QA", true]], briefing: "Campanha de captação." },
+        { id: 7, title: "IG 3x — Educ (gerado)", client: "Educ", service: "Post feed", status: "a_fazer", priority: "media", due: "Qui", late: false, owners: ["Ana"], phase: null, hours: 0, costHour: 70, checklist: [["Briefing", false], ["Arte", false], ["Copy", false], ["Revisão", false], ["Agendar", false]], briefing: "Gerado por recorrência · D-1.", recurring: true },
+        { id: 8, title: "IG 3x — Educ (gerado)", client: "Educ", service: "Post feed", status: "a_fazer", priority: "media", due: "Sáb", late: false, owners: ["Ana"], phase: null, hours: 0, costHour: 70, checklist: [["Briefing", false], ["Arte", false], ["Copy", false]], briefing: "Gerado por recorrência · D-1.", recurring: true },
+      ],
+      clients: [
+        { id: 1, name: "Educ", fee: 8000, segment: "Educação", status: "Ativo", contact: "Paulo", margin: 4200 },
+        { id: 2, name: "Cliente A", fee: 4000, segment: "Varejo", status: "Ativo", contact: "Lia", margin: 3440 },
+        { id: 3, name: "Cliente B", fee: 4000, segment: "Saúde", status: "Ativo", contact: "Rui", margin: 640 },
+        { id: 4, name: "Cliente C", fee: 4000, segment: "Indústria", status: "Ativo", contact: "Tess", margin: -650 },
+      ],
+      services: [
+        { id: 1, name: "Reels Instagram", price: 450, est: "3h", recurrence: false },
+        { id: 2, name: "Post feed", price: 280, est: "2h", recurrence: true },
+        { id: 3, name: "Folder", price: 3200, est: "20h", recurrence: false },
+        { id: 4, name: "Landing page", price: 5500, est: "24h", recurrence: false },
+      ],
+      people: [
+        { id: 1, name: "Ana Silva", role: "Colaborador", cost: 70, load: 92, team: "Criação" },
+        { id: 2, name: "Bruno Lima", role: "Gerente", cost: 65, load: 78, team: "Atendimento" },
+        { id: 3, name: "Carla Nunes", role: "Colaborador", cost: 55, load: 64, team: "Criação" },
+        { id: 4, name: "Mariana Costa", role: "Admin", cost: 90, load: 40, team: "Direção" },
+      ],
+      tenants: [
+        { id: 1, name: "Agência Educ", plan: "Pro", seats: 12, status: "Ativo", admin: "mariana@agenciaeduc.com.br" },
+        { id: 2, name: "Studio Norte", plan: "Starter", seats: 5, status: "Ativo", admin: "ops@studionorte.com" },
+        { id: 3, name: "Pulse Ads", plan: "Pro", seats: 20, status: "Trial", admin: "admin@pulseads.com" },
+      ],
+      holidays: [
+        { date: "07/09/2026", name: "Independência" },
+        { date: "12/10/2026", name: "Nossa Senhora Aparecida" },
+        { date: "15/11/2026", name: "Proclamação da República" },
+      ],
+      wlColor: "#204038",
+    };
+
+    const can = {
+      finance: () => ["admin", "manager", "super"].includes(state.persona),
+      createTask: () => ["admin", "manager", "collab", "super"].includes(state.persona),
+      deleteTask: () => ["admin", "manager", "super"].includes(state.persona),
+      config: () => ["admin", "super"].includes(state.persona),
+      configPartial: () => ["admin", "manager", "super"].includes(state.persona),
+      superOnly: () => state.persona === "super",
+      collabFilter: () => state.persona === "collab" || state.persona === "viewer",
+    };
+
+    function $(sel, root = document) { return root.querySelector(sel); }
+    function $all(sel, root = document) { return [...root.querySelectorAll(sel)]; }
+    function fmtMoney(n) {
+      const sign = n < 0 ? "− " : "";
+      return sign + "R$ " + Math.abs(n).toLocaleString("pt-BR");
+    }
+    function fmtTimer(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return [h, m, s].map((x) => String(x).padStart(2, "0")).join(":");
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function parseRoute() {
+      const raw = (location.hash || "#/login").replace(/^#/, "");
+      const parts = raw.split("/").filter(Boolean);
+      return { parts, path: "/" + parts.join("/") };
+    }
+
+    function go(hash) {
+      if (!hash.startsWith("#")) hash = "#" + hash;
+      location.hash = hash;
+    }
+
+    /* ---------- NAV ---------- */
+    function navItems() {
+      if (state.persona === "super") {
+        return [
+          { sec: "Plataforma", items: [
+            { href: "#/super/tenants", label: "Empresas" },
+            { href: "#/super/tenant/novo", label: "Nova empresa" },
+          ]},
+          { sec: "Demo", items: [
+            { href: "#/login", label: "Sair / Login" },
+            { href: "#/sitemap", label: "Mapa de telas" },
+          ]},
+        ];
+      }
+      const items = [
+        { sec: "Operação", items: [
+          { href: "#/kanban", label: "Kanban" },
+          { href: "#/lista", label: "Lista" },
+          { href: "#/calendario", label: "Calendário" },
+        ]},
+        { sec: "Cadastros", items: [
+          { href: "#/clientes", label: "Clientes" },
+          { href: "#/servicos", label: "Serviços" },
+          { href: "#/colaboradores", label: "Colaboradores" },
+        ]},
+      ];
+      if (can.finance()) {
+        items.push({ sec: "Inteligência", items: [
+          { href: "#/dashboard", label: "Dashboard" },
+          { href: "#/relatorios/margem", label: "Margem" },
+          { href: "#/relatorios/atrasos", label: "Atrasos" },
+          { href: "#/relatorios/horas", label: "Horas" },
+          { href: "#/relatorios/carga", label: "Carga" },
+        ]});
+      }
+      if (can.configPartial()) {
+        items.push({ sec: "Config", items: [
+          ...(can.config() ? [
+            { href: "#/permissoes", label: "Permissões" },
+            { href: "#/config", label: "Configurações" },
+          ] : []),
+          { href: "#/feriados", label: "Feriados" },
+        ]});
+      }
+      items.push({ sec: "Fase 3", items: [
+        { href: "#/portal", label: "Portal do cliente", phase3: true },
+        { href: "#/integracoes", label: "Integrações", phase3: true },
+        { href: "#/white-label", label: "White-label", phase3: true },
+      ]});
+      items.push({ sec: "Conta", items: [
+        { href: "#/perfil", label: "Meu perfil" },
+        { href: "#/sitemap", label: "Mapa de telas" },
+        { href: "#/login", label: "Sair" },
+      ]});
+      return items;
+    }
+
+    function renderNav(activePath) {
+      const root = $("#nav-root");
+      root.innerHTML = navItems().map((sec) => `
+        <div class="nav-sec">${sec.sec}</div>
+        ${sec.items.map((it) => {
+          const path = it.href.replace("#", "");
+          const active = activePath === path || (path === "/kanban" && ["/lista", "/calendario"].includes(activePath));
+          return `<button class="nav-item ${active ? "active" : ""}" type="button" data-go="${it.href}">
+            ${escapeHtml(it.label)}${it.phase3 ? '<span class="phase3">F3</span>' : ""}
+          </button>`;
+        }).join("")}
+      `).join("");
+    }
+
+    /* ---------- VIEWS ---------- */
+    function visibleTasks() {
+      let list = state.tasks;
+      if (state.emptyKanban) return [];
+      if (can.collabFilter()) list = list.filter((t) => t.owners.includes("Ana") || t.owners.includes("Mariana"));
+      return list;
+    }
+
+    function viewSitemap() {
+      const links = [
+        ["#/login", "Login"], ["#/convite", "Convite"], ["#/recuperar", "Recuperar senha"],
+        ["#/wizard/1", "Wizard"], ["#/kanban?empty=1", "Kanban vazio"],
+        ["#/super/tenants", "Tenants"], ["#/super/tenant/novo", "Nova empresa"], ["#/super/tenant/1", "Detalhe tenant"],
+        ["#/kanban", "Kanban"], ["#/lista", "Lista"], ["#/calendario", "Calendário"],
+        ["#/tarefa/nova", "Criar tarefa completa"], ["#/clientes", "Clientes"], ["#/clientes/novo", "Novo cliente"],
+        ["#/servicos", "Serviços"], ["#/servicos/1", "Serviço + recorrência"], ["#/colaboradores", "Colaboradores"],
+        ["#/colaboradores/novo", "Novo colaborador"], ["#/dashboard", "Dashboard"],
+        ["#/relatorios/margem", "Rel. margem"], ["#/relatorios/atrasos", "Rel. atrasos"],
+        ["#/relatorios/horas", "Rel. horas"], ["#/relatorios/carga", "Rel. carga"],
+        ["#/permissoes", "Permissões"], ["#/config", "Configurações"], ["#/feriados", "Feriados"],
+        ["#/portal", "Portal cliente"], ["#/portal/1", "Aprovar entrega"], ["#/integracoes", "Integrações"],
+        ["#/white-label", "White-label"], ["#/perfil", "Perfil"],
+      ];
+      return `
+        <div class="page-h"><div><h1>Mapa de telas</h1><p>Todas as rotas do protótipo hi-fi. Use a persona na sidebar para testar permissões.</p></div>
+        <a class="btn btn-ghost btn-sm" href="identidade-visual.html">Identidade</a></div>
+        <div class="card"><div class="card-b sitemap">
+          ${links.map(([h, l]) => `<a href="${h}">${l}</a>`).join("")}
+        </div></div>
+        <div class="grid-3" style="margin-top:12px">
+          <div class="callout action"><strong>Fluxo 1 · Onboarding</strong><div class="small muted">Super Admin → convite → wizard → Kanban vazio</div>
+            <div class="row" style="margin-top:8px"><button class="btn btn-primary btn-sm" data-go="#/super/tenants" data-persona="super">Começar</button></div></div>
+          <div class="callout"><strong>Fluxo 2 · Operação</strong><div class="small muted">+ Tarefa → drawer → timer → colunas</div>
+            <div class="row" style="margin-top:8px"><button class="btn btn-primary btn-sm" data-go="#/kanban" data-persona="collab">Começar</button></div></div>
+          <div class="callout warn"><strong>Fluxo 3 · Margem</strong><div class="small muted">Detalhe com horas → dashboard → alerta</div>
+            <div class="row" style="margin-top:8px"><button class="btn btn-primary btn-sm" data-go="#/dashboard" data-persona="admin">Começar</button></div></div>
+        </div>`;
+    }
+
+    function viewKanban(empty) {
+      const tasks = empty ? [] : visibleTasks();
+      if (empty) state.emptyKanban = true;
+      else if (location.hash.indexOf("empty") === -1) state.emptyKanban = false;
+
+      if (!tasks.length) {
+        return `
+          <div class="page-h"><div><h1>Kanban</h1><p>Home operacional — colunas do fluxo de agência.</p></div>
+            <div class="view-toggle">
+              <button class="active" data-go="#/kanban">Kanban</button>
+              <button data-go="#/lista">Lista</button>
+              <button data-go="#/calendario">Calendário</button>
+            </div>
+          </div>
+          <div class="empty">
+            <div class="arc"></div>
+            <h2 style="margin:0 0 6px;color:var(--moss)">Tudo pronto para o primeiro job</h2>
+            <p class="muted">Onboarding concluído. Crie a primeira tarefa ou ative uma recorrência.</p>
+            <div class="row" style="justify-content:center;margin-top:12px">
+              <button class="btn btn-primary" type="button" id="empty-new-task">+ Tarefa</button>
+              <button class="btn btn-ghost" type="button" data-go="#/servicos/1">Ver recorrência</button>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div class="page-h">
+          <div><h1>Kanban</h1><p>Atraso não é coluna — aparece como badge no card.</p></div>
+          <div class="view-toggle">
+            <button class="active" data-go="#/kanban">Kanban</button>
+            <button data-go="#/lista">Lista</button>
+            <button data-go="#/calendario">Calendário</button>
+          </div>
+          <div class="row">
+            <span class="pill ghost">Filtro: Meus · Cliente · Serviço</span>
+          </div>
+        </div>
+        <div class="board">
+          ${COLUMNS.map((col) => {
+            const cards = tasks.filter((t) => t.status === col.id);
+            return `<div class="col">
+              <div class="col-title">${col.label} <span>${cards.length}</span></div>
+              ${cards.map((t) => `
+                <button class="kcard ${t.late ? "late" : ""}" type="button" data-open-task="${t.id}">
+                  <div class="t"><span class="dot ${t.priority}"></span>${escapeHtml(t.title)}</div>
+                  <div class="m">${escapeHtml(t.due)} · ${t.owners.join(", ")}${t.recurring ? " · ↺" : ""}${t.late ? ' · <span style="color:var(--danger);font-weight:700">Atrasado</span>' : ""}</div>
+                </button>`).join("")}
+            </div>`;
+          }).join("")}
+        </div>
+        <div class="row small muted" style="margin-top:10px">
+          <span>Prioridade:</span>
+          <span class="row"><span class="dot urgente"></span> Urgente</span>
+          <span class="row"><span class="dot alta"></span> Alta</span>
+          <span class="row"><span class="dot media"></span> Média</span>
+          <span class="row"><span class="dot baixa"></span> Baixa</span>
+        </div>`;
+    }
+
+    function viewLista() {
+      const tasks = visibleTasks();
+      return `
+        <div class="page-h">
+          <div><h1>Lista de tarefas</h1><p>Filtros avançados, busca e exportação.</p></div>
+          <div class="view-toggle">
+            <button data-go="#/kanban">Kanban</button>
+            <button class="active" data-go="#/lista">Lista</button>
+            <button data-go="#/calendario">Calendário</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button">Exportar CSV</button>
+        </div>
+        <div class="card"><div class="card-b" style="padding:0;overflow:auto">
+          <table class="data">
+            <thead><tr><th>Tarefa</th><th>Cliente</th><th>Status</th><th>Prioridade</th><th>Prazo</th><th>Resp.</th></tr></thead>
+            <tbody>
+              ${tasks.map((t) => {
+                const st = COLUMNS.find((c) => c.id === t.status)?.label || t.status;
+                return `<tr class="clickable" data-open-task="${t.id}">
+                  <td><strong>${escapeHtml(t.title)}</strong>${t.late ? ' <span class="pill danger">Atrasado</span>' : ""}</td>
+                  <td>${escapeHtml(t.client)}</td><td>${st}</td>
+                  <td><span class="dot ${t.priority}" style="display:inline-block;margin-right:6px"></span>${t.priority}</td>
+                  <td>${escapeHtml(t.due)}</td><td>${t.owners.join(", ")}</td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div></div>`;
+    }
+
+    function viewCalendario() {
+      const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+      const events = {
+        3: [{ id: 1, title: "Reels Educ" }],
+        5: [{ id: 7, title: "IG Educ (↺)" }],
+        7: [{ id: 4, title: "Stories B" }],
+        10: [{ id: 8, title: "IG Educ (↺)" }],
+        12: [{ id: 2, title: "Carrossel A" }],
+      };
+      let cells = days.map((d) => `<div class="cal-cell head">${d}</div>`).join("");
+      for (let i = 1; i <= 28; i++) {
+        const ev = events[i] || [];
+        cells += `<div class="cal-cell"><div class="d">${i}</div>${ev.map((e) => `<div class="ev" data-open-task="${e.id}">${escapeHtml(e.title)}</div>`).join("")}</div>`;
+      }
+      return `
+        <div class="page-h">
+          <div><h1>Calendário</h1><p>Prazos, recorrências e visão semanal/mensal.</p></div>
+          <div class="view-toggle">
+            <button data-go="#/kanban">Kanban</button>
+            <button data-go="#/lista">Lista</button>
+            <button class="active" data-go="#/calendario">Calendário</button>
+          </div>
+          <span class="pill on">Ago / 2026</span>
+        </div>
+        <div class="cal-grid">${cells}</div>`;
+    }
+
+    function viewTaskForm() {
+      return `
+        <div class="page-h"><div><h1>Nova tarefa</h1><p>Formulário completo — use o modal rápido no Kanban para o dia a dia.</p></div></div>
+        <div class="card"><div class="card-b">
+          <div class="form-grid">
+            <div class="field"><label>Título</label><input placeholder="Ex.: Reels — Cliente X" /></div>
+            <div class="field"><label>Prioridade</label><select><option>Média</option><option>Baixa</option><option>Alta</option><option>Urgente</option></select></div>
+            <div class="field"><label>Cliente</label><select>${state.clients.map((c) => `<option>${c.name}</option>`).join("")}</select></div>
+            <div class="field"><label>Serviço</label><select>${state.services.map((s) => `<option>${s.name}</option>`).join("")}</select></div>
+            <div class="field"><label>Responsáveis</label><select multiple style="min-height:90px">${state.people.map((p) => `<option>${p.name}</option>`).join("")}</select></div>
+            <div class="field"><label>Prazo</label><input type="datetime-local" /></div>
+            <div class="field" style="grid-column:1/-1"><label>Briefing</label><textarea placeholder="Contexto, referências, tom de voz…"></textarea></div>
+            <div class="field"><label>Links (Drive / Figma / Canva)</label><input placeholder="https://" /></div>
+            <div class="field"><label>Lembrete</label><input type="datetime-local" /></div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <label class="small"><input type="checkbox" /> Gerar a partir de template de recorrência</label>
+          </div>
+          <div class="row" style="margin-top:14px;justify-content:flex-end">
+            <button class="btn btn-ghost" data-go="#/kanban">Cancelar</button>
+            <button class="btn btn-primary" id="save-task-full">Salvar no Kanban</button>
+          </div>
+        </div></div>`;
+    }
+
+    function viewClients(form) {
+      if (form) {
+        return `
+          <div class="page-h"><div><h1>Novo cliente</h1><p>Identificação, contato, fee e endereço fiscal.</p></div></div>
+          <div class="card"><div class="card-b">
+            <div class="form-grid">
+              <div class="field"><label>Nome fantasia</label><input /></div>
+              <div class="field"><label>Razão social</label><input /></div>
+              <div class="field"><label>CNPJ</label><input /></div>
+              <div class="field"><label>Segmento</label><input /></div>
+              <div class="field"><label>Status</label><select><option>Ativo</option><option>Inativo</option><option>Prospect</option></select></div>
+              <div class="field"><label>Responsável</label><input /></div>
+              <div class="field"><label>E-mail</label><input type="email" /></div>
+              <div class="field"><label>WhatsApp</label><input /></div>
+              <div class="field"><label>Pasta Drive</label><input placeholder="https://drive.google.com/…" /></div>
+              <div class="field"><label>Fee mensal (R$)</label><input type="number" /></div>
+              <div class="field"><label>Dia vencimento</label><input type="number" min="1" max="28" /></div>
+              <div class="field"><label>Tipo faturamento</label><select><option>Mensal</option><option>Projeto</option></select></div>
+              <div class="field" style="grid-column:1/-1"><label>Endereço fiscal</label><textarea></textarea></div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:10px">
+              <button class="btn btn-ghost" data-go="#/clientes">Cancelar</button>
+              <button class="btn btn-secondary" data-go="#/clientes">Salvar</button>
+            </div>
+          </div></div>`;
+      }
+      return `
+        <div class="page-h"><div><h1>Clientes</h1><p>Fee, contato e saúde de margem.</p></div>
+          <button class="btn btn-primary btn-sm" data-go="#/clientes/novo">+ Cliente</button></div>
+        <div class="card"><div class="card-b" style="padding:0;overflow:auto">
+          <table class="data">
+            <thead><tr><th>Cliente</th><th>Segmento</th><th>Status</th><th>Contato</th><th class="right">Fee</th>${can.finance() ? '<th class="right">Margem</th>' : ""}</tr></thead>
+            <tbody>
+              ${state.clients.map((c) => `
+                <tr class="clickable" data-go="#/clientes/novo">
+                  <td><strong>${escapeHtml(c.name)}</strong></td>
+                  <td>${escapeHtml(c.segment)}</td><td><span class="pill on">${c.status}</span></td>
+                  <td>${escapeHtml(c.contact)}</td>
+                  <td class="right">${fmtMoney(c.fee)}</td>
+                  ${can.finance() ? `<td class="right"><span class="tone ${c.margin < 0 ? "danger" : c.margin < 1000 ? "warn" : "ok"}">${fmtMoney(c.margin)}</span></td>` : ""}
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div></div>`;
+    }
+
+    function viewServices(id) {
+      if (id) {
+        const s = state.services.find((x) => String(x.id) === String(id)) || state.services[1];
+        return `
+          <div class="page-h"><div><h1>${escapeHtml(s.name)}</h1><p>Checklist, tempo estimado e template de recorrência.</p></div>
+            <span class="pill action">Template de recorrência</span></div>
+          <div class="grid-2">
+            <div class="card"><div class="card-h">Dados do serviço</div><div class="card-b form-grid" style="display:grid">
+              <div class="field"><label>Nome comercial</label><input value="${escapeHtml(s.name)}" /></div>
+              <div class="field"><label>Preço de venda</label><input value="${s.price}" /></div>
+              <div class="field"><label>Tempo estimado</label><input value="${s.est}" /></div>
+              <div class="field"><label>Custo estimado</label><input value="180" /></div>
+              <div class="field" style="grid-column:1/-1"><label>Checklist padrão</label>
+                <textarea>Briefing&#10;Arte&#10;Copy&#10;Revisão&#10;Agendar</textarea></div>
+            </div></div>
+            <div class="card"><div class="card-h">Recorrência · redes sociais</div><div class="card-b stack">
+              <div class="callout action"><strong>Cliente Educ · IG 3x/semana</strong>
+                <div class="small muted">Ter / Qui / Sáb · Ana · prazo D-1 · gera 2–4 semanas à frente</div></div>
+              <div class="field"><label>Frequência</label><select><option>Terça, quinta e sábado</option><option>Semanal</option><option>Mensal</option></select></div>
+              <div class="field"><label>Responsável padrão</label><select><option>Ana Silva</option><option>Bruno Lima</option></select></div>
+              <div class="field"><label>Horizonte de geração</label><select><option>2 semanas</option><option selected>4 semanas</option></select></div>
+              <div class="row">
+                <button class="btn btn-primary" data-go="#/kanban">Gerar cards no Kanban</button>
+                <button class="btn btn-ghost" data-go="#/calendario">Ver no calendário</button>
+              </div>
+            </div></div>
+          </div>`;
+      }
+      return `
+        <div class="page-h"><div><h1>Serviços</h1><p>Escopo, preço e templates.</p></div>
+          <button class="btn btn-primary btn-sm" data-go="#/servicos/1">+ Serviço</button></div>
+        <div class="card"><div class="card-b" style="padding:0">
+          <table class="data">
+            <thead><tr><th>Serviço</th><th class="right">Preço</th><th>Estimativa</th><th>Recorrência</th></tr></thead>
+            <tbody>
+              ${state.services.map((s) => `
+                <tr class="clickable" data-go="#/servicos/${s.id}">
+                  <td><strong>${escapeHtml(s.name)}</strong></td>
+                  <td class="right">${fmtMoney(s.price)}</td>
+                  <td>${s.est}</td>
+                  <td>${s.recurrence ? '<span class="pill action">Ativa</span>' : '<span class="pill">—</span>'}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div></div>`;
+    }
+
+    function viewPeople(form) {
+      if (form) {
+        return `
+          <div class="page-h"><div><h1>Novo colaborador</h1></div></div>
+          <div class="card"><div class="card-b">
+            <div class="form-grid">
+              <div class="field"><label>Nome</label><input /></div>
+              <div class="field"><label>E-mail</label><input type="email" /></div>
+              <div class="field"><label>Cargo</label><input /></div>
+              <div class="field"><label>Equipe</label><select><option>Criação</option><option>Atendimento</option><option>Mídia</option><option>Comercial</option></select></div>
+              <div class="field"><label>Custo/hora (R$)</label><input type="number" /></div>
+              <div class="field"><label>Carga semanal (h)</label><input type="number" value="40" /></div>
+              <div class="field"><label>Role</label><select><option>Colaborador</option><option>Gerente</option><option>Admin</option><option>Visualizador</option></select></div>
+              <div class="field"><label>Status</label><select><option>Ativo</option><option>Inativo</option></select></div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:10px">
+              <button class="btn btn-ghost" data-go="#/colaboradores">Cancelar</button>
+              <button class="btn btn-secondary" data-go="#/colaboradores">Salvar</button>
+            </div>
+          </div></div>`;
+      }
+      return `
+        <div class="page-h"><div><h1>Colaboradores</h1><p>Custo/hora, carga e permissões.</p></div>
+          <button class="btn btn-primary btn-sm" data-go="#/colaboradores/novo">+ Colaborador</button></div>
+        <div class="card"><div class="card-b" style="padding:0">
+          <table class="data">
+            <thead><tr><th>Nome</th><th>Role</th><th>Equipe</th><th class="right">Custo/h</th><th>Carga</th></tr></thead>
+            <tbody>
+              ${state.people.map((p) => `
+                <tr class="clickable" data-go="#/colaboradores/novo">
+                  <td><strong>${escapeHtml(p.name)}</strong></td>
+                  <td>${p.role}</td><td>${p.team}</td>
+                  <td class="right">${can.finance() ? fmtMoney(p.cost) : "•••"}</td>
+                  <td style="min-width:140px"><div class="row"><div class="bar ${p.load > 90 ? "danger" : p.load > 80 ? "warn" : ""} grow"><i style="width:${p.load}%"></i></div><span class="tiny">${p.load}%</span></div></td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div></div>`;
+    }
+
+    function viewDashboard() {
+      if (!can.finance()) return `<div class="callout danger"><strong>Sem acesso</strong> Relatórios financeiros restritos a Admin e Gerente.</div>`;
+      return `
+        <div class="page-h"><div><h1>Dashboard</h1><p>Jul/2026 · margem, prazo e carga.</p></div>
+          <span class="pill on">Admin / Gerente</span></div>
+        <div class="grid-4">
+          <div class="stat clickable" data-go="#/relatorios/atrasos"><div class="v">18</div><div class="l">Entregues no prazo</div></div>
+          <div class="stat danger clickable" data-go="#/relatorios/atrasos"><div class="v">3</div><div class="l">Atrasadas</div></div>
+          <div class="stat action clickable" data-go="#/relatorios/margem"><div class="v">R$ 7,6k</div><div class="l">Margem do mês</div></div>
+          <div class="stat warn clickable" data-go="#/relatorios/carga"><div class="v">86%</div><div class="l">Capacidade média</div></div>
+        </div>
+        <div class="grid-2" style="margin-top:12px">
+          <div class="card"><div class="card-h">Margem por cliente <button class="btn btn-ghost btn-sm" data-go="#/relatorios/margem">Ver relatório</button></div>
+            <div class="card-b" style="padding:0">
+              <table class="data"><thead><tr><th>Cliente</th><th class="right">Fee</th><th class="right">Custo</th><th class="right">Margem</th></tr></thead>
+              <tbody>
+                ${state.clients.map((c) => `<tr><td class="tone ${c.margin < 0 ? "danger" : c.margin < 1000 ? "warn" : "ok"}">${c.name}</td>
+                  <td class="right">${fmtMoney(c.fee)}</td><td class="right">${fmtMoney(c.fee - c.margin)}</td>
+                  <td class="right"><strong>${fmtMoney(c.margin)}</strong></td></tr>`).join("")}
+              </tbody></table>
+            </div>
+            <div class="callout danger" style="margin:12px">Cliente C com margem negativa — revisar correções e escopo.</div>
+          </div>
+          <div class="card"><div class="card-h">Estimado vs real <button class="btn btn-ghost btn-sm" data-go="#/relatorios/horas">Horas</button></div>
+            <div class="card-b stack">
+              ${[["Folder / Cliente A", 40, "ok"], ["Folder / Cliente B", 85, "warn"], ["Folder / Cliente C", 120, "danger"]].map(([l, p, t]) => `
+                <div><div class="row small"><strong>${l}</strong><span class="spacer"></span><span class="faint">${p}% do estimado</span></div>
+                <div class="bar ${t}" style="margin-top:6px"><i style="width:${Math.min(p, 100)}%"></i></div></div>`).join("")}
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px"><div class="card-h">Carga por colaborador</div>
+          <div class="card-b grid-3">
+            ${state.people.map((p) => `
+              <div class="stat"><div class="v" style="font-size:1.1rem">${p.name.split(" ")[0]}</div>
+              <div class="l">${p.team}</div>
+              <div class="bar ${p.load > 90 ? "danger" : ""}" style="margin-top:8px"><i style="width:${p.load}%"></i></div>
+              <div class="tiny faint" style="margin-top:4px">${p.load}% da capacidade</div></div>`).join("")}
+          </div>
+        </div>`;
+    }
+
+    function viewReport(type) {
+      if (!can.finance()) return `<div class="callout danger"><strong>Sem acesso</strong> Relatórios financeiros restritos a Admin e Gerente.</div>`;
+      const titles = { margem: "Relatório de margem", atrasos: "Atrasos e prazos", horas: "Horas por colaborador/cliente", carga: "Carga de trabalho" };
+      if (type === "margem") {
+        return `
+          <div class="page-h"><div><h1>${titles.margem}</h1><p>Fee − Σ(horas × custo/hora).</p></div><button class="btn btn-ghost btn-sm" data-go="#/dashboard">Dashboard</button></div>
+          <div class="callout danger" style="margin-bottom:12px"><strong>Alerta</strong> Cliente C: margem −R$ 650 no mês (62h de Folder).</div>
+          <div class="card"><div class="card-b" style="padding:0"><table class="data">
+            <thead><tr><th>Cliente</th><th>Serviço</th><th class="right">Horas</th><th class="right">Custo/h</th><th class="right">Custo real</th><th class="right">Fee</th><th class="right">Margem</th></tr></thead>
+            <tbody>
+              <tr><td class="tone ok">Cliente A</td><td>Folder</td><td class="right">8h</td><td class="right">70</td><td class="right">560</td><td class="right">4.000</td><td class="right">+3.440</td></tr>
+              <tr><td class="tone warn">Cliente B</td><td>Folder</td><td class="right">48h</td><td class="right">70</td><td class="right">3.360</td><td class="right">4.000</td><td class="right">+640</td></tr>
+              <tr><td class="tone danger">Cliente C</td><td>Folder</td><td class="right">62h</td><td class="right">75</td><td class="right">4.650</td><td class="right">4.000</td><td class="right">−650</td></tr>
+            </tbody>
+          </table></div></div>`;
+      }
+      if (type === "atrasos") {
+        return `
+          <div class="page-h"><div><h1>${titles.atrasos}</h1></div></div>
+          <div class="grid-3" style="margin-bottom:12px">
+            <div class="stat"><div class="v">18</div><div class="l">No prazo</div></div>
+            <div class="stat danger"><div class="v">3</div><div class="l">Atrasadas</div></div>
+            <div class="stat"><div class="v">86%</div><div class="l">SLA</div></div>
+          </div>
+          <div class="card"><div class="card-b" style="padding:0"><table class="data">
+            <thead><tr><th>Tarefa</th><th>Cliente</th><th>Prazo</th><th>Atraso</th></tr></thead>
+            <tbody>
+              ${state.tasks.filter((t) => t.late).map((t) => `<tr class="clickable" data-open-task="${t.id}"><td>${escapeHtml(t.title)}</td><td>${t.client}</td><td>${t.due}</td><td><span class="pill danger">Em atraso</span></td></tr>`).join("") || '<tr><td colspan="4">Nenhuma neste filtro demo</td></tr>'}
+            </tbody>
+          </table></div></div>`;
+      }
+      if (type === "horas") {
+        return `
+          <div class="page-h"><div><h1>${titles.horas}</h1></div></div>
+          <div class="card"><div class="card-b" style="padding:0"><table class="data">
+            <thead><tr><th>Colaborador</th><th>Cliente</th><th>Fase</th><th class="right">Horas</th><th class="right">Custo</th></tr></thead>
+            <tbody>
+              <tr><td>Ana</td><td>Educ</td><td>Produção</td><td class="right">12,5</td><td class="right">875</td></tr>
+              <tr><td>Ana</td><td>Cliente C</td><td>Correção</td><td class="right">18,0</td><td class="right">1.350</td></tr>
+              <tr><td>Bruno</td><td>Cliente A</td><td>Revisão</td><td class="right">6,0</td><td class="right">390</td></tr>
+              <tr><td>Carla</td><td>Educ</td><td>Produção</td><td class="right">8,0</td><td class="right">440</td></tr>
+            </tbody>
+          </table></div></div>`;
+      }
+      return `
+        <div class="page-h"><div><h1>${titles.carga}</h1><p>% da capacidade semanal.</p></div></div>
+        <div class="grid-2">
+          ${state.people.map((p) => `
+            <div class="card"><div class="card-b">
+              <div class="row"><strong>${escapeHtml(p.name)}</strong><span class="spacer"></span><span class="pill ${p.load > 90 ? "danger" : "on"}">${p.load}%</span></div>
+              <div class="tiny faint">${p.team} · ${p.role}</div>
+              <div class="bar ${p.load > 90 ? "danger" : p.load > 80 ? "warn" : "action"}" style="margin-top:10px"><i style="width:${p.load}%"></i></div>
+            </div></div>`).join("")}
+        </div>`;
+    }
+
+    function viewPermissoes() {
+      if (!can.config()) return `<div class="callout danger"><strong>Sem acesso</strong> Só Admin configura permissões.</div>`;
+      const rows = [
+        ["Ver só tarefas alocadas", "—", "—", "Sim", "Sim"],
+        ["Criar tarefas", "Sim", "Sim", "Config.", "Não"],
+        ["Excluir tarefas", "Sim", "Config.", "Não", "Não"],
+        ["Relatórios financeiros", "Sim", "Sim", "Não", "Não"],
+        ["Configurações do tenant", "Sim", "Parcial", "Não", "Não"],
+      ];
+      return `
+        <div class="page-h"><div><h1>Permissões</h1><p>Matriz por role — inspirada no Runrun.it, simplificada.</p></div></div>
+        <div class="card"><div class="card-b" style="padding:0;overflow:auto"><table class="data">
+          <thead><tr><th>Permissão</th><th>Admin</th><th>Gerente</th><th>Colaborador</th><th>Visualizador</th></tr></thead>
+          <tbody>${rows.map((r) => `<tr>${r.map((c, i) => `<td${i === 0 ? "" : ' style="text-align:center"'}>${c}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table></div></div>
+        <div class="callout" style="margin-top:12px">Troque a <strong>persona demo</strong> na sidebar para ver o efeito na navegação e nos botões.</div>`;
+    }
+
+    function viewConfig() {
+      if (!can.config()) return `<div class="callout danger"><strong>Sem acesso</strong></div>`;
+      const blocks = [
+        ["Usuários", "Quem cria usuários; permitir troca de foto; convites."],
+        ["Tarefas", "Quem pode excluir; pré-requisitos em cadeia; timer ao abrir."],
+        ["Notificações", "E-mail e in-app por tipo de evento; digest diário."],
+        ["Visibilidade", "Colaborador vê só alocadas; acesso a relatórios por role."],
+      ];
+      return `
+        <div class="page-h"><div><h1>Configurações</h1><p>Quatro blocos para reduzir complexidade.</p></div></div>
+        <div class="grid-2">
+          ${blocks.map(([t, d]) => `
+            <div class="card"><div class="card-h">${t}</div><div class="card-b">
+              <p class="small muted" style="margin-top:0">${d}</p>
+              <label class="small row"><input type="checkbox" checked /> Ativo neste tenant</label>
+              <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" type="button">Editar regras</button></div>
+            </div></div>`).join("")}
+        </div>`;
+    }
+
+    function viewFeriados() {
+      return `
+        <div class="page-h"><div><h1>Feriados</h1><p>Calendário institucional do tenant.</p></div>
+          <button class="btn btn-primary btn-sm" type="button" id="add-holiday">+ Feriado</button></div>
+        <div class="card"><div class="card-b" style="padding:0"><table class="data">
+          <thead><tr><th>Data</th><th>Nome</th></tr></thead>
+          <tbody>${state.holidays.map((h) => `<tr><td>${h.date}</td><td>${escapeHtml(h.name)}</td></tr>`).join("")}</tbody>
+        </table></div></div>`;
+    }
+
+    function viewPerfil() {
+      return `
+        <div class="page-h"><div><h1>Meu perfil</h1></div></div>
+        <div class="card" style="max-width:520px"><div class="card-b">
+          <div class="row" style="margin-bottom:14px"><div class="avatar" style="width:48px;height:48px;font-size:1rem">MC</div>
+            <div><strong>Mariana Costa</strong><div class="tiny faint">Admin · Agência Educ</div></div></div>
+          <div class="field"><label>Nome</label><input value="Mariana Costa" /></div>
+          <div class="field"><label>E-mail</label><input value="mariana@agenciaeduc.com.br" /></div>
+          <div class="field"><label>Foto</label><input type="file" /></div>
+          <button class="btn btn-secondary" type="button">Salvar</button>
+        </div></div>`;
+    }
+
+    function viewTenants(mode, id) {
+      if (mode === "form") {
+        return `
+          <div class="page-h"><div><h1>Nova empresa</h1><p>Super Admin · cadastro de tenant.</p></div></div>
+          <div class="card" style="max-width:640px"><div class="card-b">
+            <div class="form-grid">
+              <div class="field"><label>Nome da empresa</label><input placeholder="Agência Exemplo" id="tenant-name" /></div>
+              <div class="field"><label>Plano</label><select><option>Starter</option><option selected>Pro</option><option>Enterprise</option></select></div>
+              <div class="field"><label>Limite de assentos</label><input type="number" value="10" /></div>
+              <div class="field"><label>E-mail do Admin</label><input type="email" placeholder="admin@empresa.com" /></div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:10px">
+              <button class="btn btn-ghost" data-go="#/super/tenants">Cancelar</button>
+              <button class="btn btn-primary" data-go="#/convite" data-persona="admin" id="create-tenant">Criar e enviar convite</button>
+            </div>
+          </div></div>`;
+      }
+      if (mode === "detail") {
+        const t = state.tenants.find((x) => String(x.id) === String(id)) || state.tenants[0];
+        return `
+          <div class="page-h"><div><h1>${escapeHtml(t.name)}</h1><p>Detalhe do tenant</p></div>
+            <button class="btn btn-ghost btn-sm" data-go="#/super/tenants">Voltar</button></div>
+          <div class="grid-3">
+            <div class="stat"><div class="v" style="font-size:1.1rem">${t.plan}</div><div class="l">Plano</div></div>
+            <div class="stat"><div class="v" style="font-size:1.1rem">${t.seats}</div><div class="l">Assentos</div></div>
+            <div class="stat"><div class="v" style="font-size:1.1rem">${t.status}</div><div class="l">Status</div></div>
+          </div>
+          <div class="card" style="margin-top:12px"><div class="card-b">
+            <div class="small"><strong>Admin:</strong> ${escapeHtml(t.admin)}</div>
+            <div class="row" style="margin-top:12px">
+              <button class="btn btn-primary btn-sm" data-go="#/convite" data-persona="admin">Reenviar convite</button>
+              <button class="btn btn-ghost btn-sm" data-go="#/wizard/1" data-persona="admin">Abrir wizard (demo)</button>
+            </div>
+          </div></div>`;
+      }
+      return `
+        <div class="page-h"><div><h1>Empresas</h1><p>Super Admin · multi-tenant.</p></div>
+          <button class="btn btn-primary btn-sm" data-go="#/super/tenant/novo">+ Empresa</button></div>
+        <div class="card"><div class="card-b" style="padding:0"><table class="data">
+          <thead><tr><th>Empresa</th><th>Plano</th><th>Assentos</th><th>Status</th><th>Admin</th></tr></thead>
+          <tbody>
+            ${state.tenants.map((t) => `
+              <tr class="clickable" data-go="#/super/tenant/${t.id}">
+                <td><strong>${escapeHtml(t.name)}</strong></td>
+                <td>${t.plan}</td><td>${t.seats}</td>
+                <td><span class="pill on">${t.status}</span></td>
+                <td class="small">${escapeHtml(t.admin)}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table></div></div>
+        <div class="callout action" style="margin-top:12px"><strong>Fluxo onboarding</strong> Crie uma empresa → convite → wizard → Kanban vazio.
+          <div style="margin-top:8px"><button class="btn btn-primary btn-sm" data-go="#/super/tenant/novo">Iniciar fluxo</button></div>
+        </div>`;
+    }
+
+    function viewPortal(detail) {
+      if (detail) {
+        return `
+          <div class="page-h"><div><h1>Aprovar entrega</h1><p>Portal do cliente · Fase 3</p></div>
+            <span class="badge-phase3">Fase 3</span></div>
+          <div class="card"><div class="card-b stack">
+            <div><strong>Stories — Cliente B</strong><div class="small muted">Enviado pela Agência Educ · aguardando OK</div></div>
+            <div class="callout">Prévia da arte (placeholder). Links do Drive/Figma aparecem aqui.</div>
+            <div class="field"><label>Comentário</label><textarea placeholder="Pedidos de ajuste…"></textarea></div>
+            <div class="row">
+              <button class="btn btn-secondary" data-go="#/portal">Aprovar</button>
+              <button class="btn btn-danger" data-go="#/portal">Pedir correção</button>
+              <button class="btn btn-ghost" data-go="#/portal">Voltar</button>
+            </div>
+          </div></div>`;
+      }
+      return `
+        <div class="page-h"><div><h1>Portal do cliente</h1><p>Fila de aprovações externas.</p></div>
+          <span class="badge-phase3">Fase 3</span></div>
+        <div class="card"><div class="card-b" style="padding:0"><table class="data">
+          <thead><tr><th>Entrega</th><th>Cliente</th><th>Enviado em</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><strong>Stories — Cliente B</strong></td><td>Cliente B</td><td>02/08</td><td><button class="btn btn-primary btn-sm" data-go="#/portal/1">Revisar</button></td></tr>
+            <tr><td><strong>Carrossel Q3</strong></td><td>Cliente A</td><td>01/08</td><td><button class="btn btn-ghost btn-sm" data-go="#/portal/1">Revisar</button></td></tr>
+          </tbody>
+        </table></div></div>`;
+    }
+
+    function viewIntegracoes() {
+      return `
+        <div class="page-h"><div><h1>Integrações</h1><p>Conectores externos.</p></div><span class="badge-phase3">Fase 3</span></div>
+        <div class="grid-3">
+          ${[["Google Drive", "Pastas por cliente"], ["Figma", "Links de arte"], ["Meta", "Publicação / insights"]].map(([n, d]) => `
+            <div class="card"><div class="card-h">${n}</div><div class="card-b">
+              <p class="small muted" style="margin:0 0 12px">${d}</p>
+              <button class="btn btn-ghost btn-sm" type="button">Conectar (placeholder)</button>
+            </div></div>`).join("")}
+        </div>`;
+    }
+
+    function viewWhiteLabel() {
+      return `
+        <div class="page-h"><div><h1>White-label</h1><p>Cor de marca por tenant.</p></div><span class="badge-phase3">Fase 3</span></div>
+        <div class="grid-2">
+          <div class="card"><div class="card-h">Preferências</div><div class="card-b">
+            <div class="field"><label>Cor primária do tenant</label>
+              <input type="color" id="wl-color" value="${state.wlColor}" style="height:42px;padding:4px" /></div>
+            <div class="field"><label>Logo do tenant</label><input type="file" /></div>
+            <button class="btn btn-secondary" type="button" id="wl-apply">Aplicar preview</button>
+          </div></div>
+          <div class="card"><div class="card-h">Preview</div><div class="card-b">
+            <div class="wl-preview" id="wl-preview" style="background:${state.wlColor}">Gestor Job</div>
+            <p class="small muted" style="margin:10px 0 0">No futuro, a sidebar e CTAs herdam a cor do tenant (mantendo laranja de ação do produto quando desejado).</p>
+          </div></div>
+        </div>`;
+    }
+
+    function renderWizard() {
+      const step = state.wizardStep;
+      const stepsHtml = WIZARD.map((w) => {
+        const cls = w.id < step ? "done" : w.id === step ? "now" : "";
+        return `<div class="ws ${cls}">${w.id}. ${w.title}</div>`;
+      }).join("");
+      $("#wizard-steps").innerHTML = stepsHtml;
+      const bodies = {
+        1: `<div class="form-grid">
+              <div class="field"><label>Serviço</label><input value="Post feed Instagram" /></div>
+              <div class="field"><label>Preço padrão</label><input value="280" /></div>
+              <div class="field" style="grid-column:1/-1"><label>Checklist padrão</label><textarea>Briefing&#10;Arte&#10;Copy&#10;Revisão&#10;Agendar</textarea></div>
+            </div>`,
+        2: `<div class="form-grid">
+              <div class="field"><label>Nome</label><input value="Ana Silva" /></div>
+              <div class="field"><label>E-mail</label><input value="ana@agenciaeduc.com.br" /></div>
+              <div class="field"><label>Custo/hora</label><input value="70" /></div>
+              <div class="field"><label>Role</label><select><option>Colaborador</option><option>Gerente</option></select></div>
+            </div>`,
+        3: `<div class="form-grid">
+              <div class="field"><label>Cliente</label><input value="Educ" /></div>
+              <div class="field"><label>Fee mensal</label><input value="8000" /></div>
+              <div class="field"><label>Contato</label><input value="Paulo" /></div>
+              <div class="field"><label>Segmento</label><input value="Educação" /></div>
+            </div>`,
+        4: `<div class="stack-sm">
+              <div class="small muted">${WIZARD[3].hint}</div>
+              <table class="data"><thead><tr><th>Data</th><th>Nome</th></tr></thead>
+              <tbody>${state.holidays.map((h) => `<tr><td>${h.date}</td><td>${h.name}</td></tr>`).join("")}</tbody></table>
+            </div>`,
+        5: `<div class="stack-sm">
+              <div class="small muted">${WIZARD[4].hint}</div>
+              <div class="callout">Colaborador vê só tarefas alocadas · Financeiro só Admin/Gerente · Exclusão restrita.</div>
+              <label class="small row"><input type="checkbox" checked /> Aplicar matriz padrão recomendada</label>
+            </div>`,
+      };
+      $("#wizard-body").innerHTML = `<h3 style="margin:0 0 6px;color:var(--moss)">${WIZARD[step - 1].title}</h3>
+        <p class="small muted" style="margin-top:0">${WIZARD[step - 1].hint}</p>${bodies[step]}`;
+      $("#wizard-prev").disabled = step <= 1;
+      $("#wizard-next").textContent = step >= 5 ? "Concluir e abrir Kanban" : "Continuar";
+    }
+
+    function openDrawer(taskId) {
+      const t = state.tasks.find((x) => x.id === Number(taskId));
+      if (!t) return;
+      state.selectedTaskId = t.id;
+      if (!t.phase) {
+        t.phase = "Analise";
+        state.timerPhase = "Analise";
+      } else {
+        state.timerPhase = t.phase;
+      }
+      const cost = Math.round(t.hours * t.costHour * 100) / 100;
+      const done = t.checklist.filter((c) => c[1]).length;
+      $("#drawer").innerHTML = `
+        <div class="drawer-head">
+          <strong>${escapeHtml(t.title)}</strong>
+          <span class="spacer"></span>
+          <span class="pill action live" id="timer-pill">${fmtTimer(state.timerSeconds)} ${state.timerPhase}</span>
+          <button class="icon-btn" type="button" id="drawer-close" style="width:32px;height:32px">✕</button>
+        </div>
+        <div class="drawer-body">
+          <div class="stack-sm">
+            <h3 style="margin:0;color:var(--moss)">Execução</h3>
+            <div class="row">
+              <span class="pill on">${COLUMNS.find((c) => c.id === t.status)?.label || t.status}</span>
+              <span class="pill warn">${t.priority}</span>
+              ${t.late ? '<span class="pill danger">Atrasado</span>' : ""}
+            </div>
+            <div class="row">
+              <span class="tiny faint">Fase do timer:</span>
+              ${["Analise", "Producao", "Revisao", "Correcao", "Pausado"].map((p) =>
+                `<button class="btn btn-sm ${state.timerPhase === p ? "btn-primary" : "btn-ghost"}" type="button" data-phase="${p}">${p}</button>`
+              ).join("")}
+            </div>
+            <div class="card"><div class="card-h">Checklist ${done}/${t.checklist.length}</div><div class="card-b">
+              ${t.checklist.map((c, i) => `
+                <label class="check-item"><input type="checkbox" data-check="${i}" ${c[1] ? "checked" : ""} /> ${escapeHtml(c[0])}</label>`).join("")}
+            </div></div>
+            <div class="card"><div class="card-h">Briefing</div><div class="card-b small muted">${escapeHtml(t.briefing)}</div></div>
+            <div class="card"><div class="card-h">Comentários / timeline</div><div class="card-b stack-sm small">
+              <div><strong>Ana</strong> <span class="faint">· arte v1 no Figma</span></div>
+              <div><strong>Sistema</strong> <span class="faint">· A fazer → Em execução</span></div>
+              <div class="field" style="margin:0"><input placeholder="Escrever comentário…" /></div>
+            </div></div>
+          </div>
+          <div class="stack-sm">
+            <h3 style="margin:0;color:var(--moss)">Contexto</h3>
+            <div class="card"><div class="card-b small stack-sm">
+              <div>Cliente: <strong>${escapeHtml(t.client)}</strong></div>
+              <div>Serviço: ${escapeHtml(t.service)}</div>
+              <div>Resp.: ${t.owners.join(", ")}</div>
+              <div>Prazo: ${escapeHtml(t.due)}</div>
+              <div class="faint">Lembrete separado do timer</div>
+            </div></div>
+            ${can.finance() ? `<div class="cost-box"><div class="tiny" style="color:var(--moss);font-weight:700">CUSTO ACUMULADO</div>
+              <strong>${fmtMoney(cost)}</strong>
+              <div class="small muted">${t.hours}h · ${t.owners[0]} ${fmtMoney(t.costHour)}/h</div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:8px" data-go="#/relatorios/margem">Ver margem do cliente</button>
+            </div>` : `<div class="callout">Custo oculto para este perfil.</div>`}
+            <div class="card"><div class="card-h">Mover status</div><div class="card-b row">
+              ${COLUMNS.map((c) => `<button class="btn btn-sm ${t.status === c.id ? "btn-secondary" : "btn-ghost"}" type="button" data-move="${c.id}">${c.label}</button>`).join("")}
+            </div></div>
+            ${can.deleteTask() ? `<button class="btn btn-danger btn-sm" type="button">Excluir tarefa</button>` : ""}
+          </div>
+        </div>`;
+      $("#drawer-root").classList.add("open");
+      $("#drawer-close").onclick = closeDrawer;
+      $all("[data-phase]", $("#drawer")).forEach((b) => b.onclick = () => {
+        state.timerPhase = b.dataset.phase;
+        t.phase = b.dataset.phase;
+        if (b.dataset.phase === "Producao") {
+          const firstOpen = t.checklist.find((c) => !c[1]);
+          if (firstOpen) firstOpen[1] = true;
+        }
+        openDrawer(t.id);
+      });
+      $all("[data-check]", $("#drawer")).forEach((inp) => inp.onchange = () => {
+        t.checklist[Number(inp.dataset.check)][1] = inp.checked;
+        if (inp.checked && state.timerPhase === "Analise") {
+          state.timerPhase = "Producao";
+          t.phase = "Producao";
+        }
+        openDrawer(t.id);
+      });
+      $all("[data-move]", $("#drawer")).forEach((b) => b.onclick = () => {
+        t.status = b.dataset.move;
+        if (b.dataset.move === "revisao") { state.timerPhase = "Revisao"; t.phase = "Revisao"; }
+        if (b.dataset.move === "cliente" || b.dataset.move === "concluido") { state.timerPhase = "Pausado"; t.phase = "Pausado"; }
+        openDrawer(t.id);
+        route();
+      });
+    }
+
+    function closeDrawer() {
+      $("#drawer-root").classList.remove("open");
+      state.selectedTaskId = null;
+    }
+
+    function openQuickTaskModal() {
+      if (!can.createTask()) {
+        alert("Seu perfil não pode criar tarefas.");
+        return;
+      }
+      $("#modal").className = "modal";
+      $("#modal").innerHTML = `
+        <div class="modal-h">Criação rápida <span class="spacer"></span>
+          <button class="linkish" type="button" data-go="#/tarefa/nova" id="to-full">Formulário completo</button></div>
+        <div class="modal-b">
+          <div class="field"><label>Título</label><input id="qt-title" placeholder="Ex.: Reels — Cliente X" /></div>
+          <div class="form-grid">
+            <div class="field"><label>Cliente</label><select id="qt-client">${state.clients.map((c) => `<option>${c.name}</option>`).join("")}</select></div>
+            <div class="field"><label>Serviço</label><select id="qt-service">${state.services.map((s) => `<option>${s.name}</option>`).join("")}</select></div>
+            <div class="field"><label>Responsável</label><select id="qt-owner">${state.people.map((p) => `<option>${p.name.split(" ")[0]}</option>`).join("")}</select></div>
+            <div class="field"><label>Prioridade</label><select id="qt-prio"><option value="media">Média</option><option value="baixa">Baixa</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
+          </div>
+        </div>
+        <div class="modal-f">
+          <button class="btn btn-ghost" type="button" id="modal-cancel">Cancelar</button>
+          <button class="btn btn-primary" type="button" id="modal-save">Criar no Kanban</button>
+        </div>`;
+      $("#modal-root").classList.add("open");
+      $("#modal-cancel").onclick = () => $("#modal-root").classList.remove("open");
+      $("#to-full").onclick = () => { $("#modal-root").classList.remove("open"); go("#/tarefa/nova"); };
+      $("#modal-save").onclick = () => {
+        const id = Math.max(...state.tasks.map((t) => t.id)) + 1;
+        state.tasks.unshift({
+          id,
+          title: $("#qt-title").value || "Nova tarefa",
+          client: $("#qt-client").value,
+          service: $("#qt-service").value,
+          status: "a_fazer",
+          priority: $("#qt-prio").value,
+          due: "Sem prazo",
+          late: false,
+          owners: [$("#qt-owner").value],
+          phase: null,
+          hours: 0,
+          costHour: 70,
+          checklist: [["Briefing", false], ["Produção", false], ["Revisão", false]],
+          briefing: "Criada via modal rápido.",
+        });
+        state.emptyKanban = false;
+        $("#modal-root").classList.remove("open");
+        go("#/kanban");
+      };
+    }
+
+    /* ---------- ROUTER ---------- */
+    function showAuth(name) {
+      $("#auth-root").classList.remove("hidden");
+      $("#app").classList.remove("on");
+      $all("[data-auth]").forEach((el) => el.classList.toggle("hidden", el.dataset.auth !== name));
+    }
+
+    function showApp() {
+      $("#auth-root").classList.add("hidden");
+      $("#app").classList.add("on");
+      $("#persona-select").value = state.persona;
+      const initials = { admin: "MC", manager: "BL", collab: "AS", viewer: "VZ", super: "SA" };
+      $("#btn-profile").textContent = initials[state.persona] || "U";
+      $("#btn-new-task").style.display = can.createTask() && state.persona !== "super" ? "" : "none";
+    }
+
+    function route() {
+      const { parts, path } = parseRoute();
+      state.notifOpen = false;
+      $("#notif-panel").classList.remove("open");
+
+      // Auth routes
+      if (!parts.length || parts[0] === "login") {
+        showAuth("login");
+        return;
+      }
+      if (parts[0] === "convite") { showAuth("convite"); return; }
+      if (parts[0] === "recuperar") { showAuth("recuperar"); return; }
+      if (parts[0] === "recuperar-ok") { showAuth("recuperar-ok"); return; }
+      if (parts[0] === "wizard") {
+        state.persona = "admin";
+        state.wizardStep = Number(parts[1] || 1);
+        showAuth("wizard");
+        renderWizard();
+        return;
+      }
+
+      // App routes
+      if (parts[0] === "super") state.persona = "super";
+      showApp();
+      renderNav("/" + parts.join("/").split("?")[0]);
+
+      let html = "";
+      const p0 = parts[0];
+      const p1 = parts[1];
+      const p2 = parts[2];
+
+      if (p0 === "sitemap") html = viewSitemap();
+      else if (p0 === "kanban") html = viewKanban(location.hash.includes("empty=1"));
+      else if (p0 === "lista") html = viewLista();
+      else if (p0 === "calendario") html = viewCalendario();
+      else if (p0 === "tarefa" && p1 === "nova") html = viewTaskForm();
+      else if (p0 === "clientes" && p1 === "novo") html = viewClients(true);
+      else if (p0 === "clientes") html = viewClients(false);
+      else if (p0 === "servicos") html = viewServices(p1);
+      else if (p0 === "colaboradores" && p1 === "novo") html = viewPeople(true);
+      else if (p0 === "colaboradores") html = viewPeople(false);
+      else if (p0 === "dashboard") html = viewDashboard();
+      else if (p0 === "relatorios") html = viewReport(p1 || "margem");
+      else if (p0 === "permissoes") html = viewPermissoes();
+      else if (p0 === "config") html = viewConfig();
+      else if (p0 === "feriados") html = viewFeriados();
+      else if (p0 === "perfil") html = viewPerfil();
+      else if (p0 === "super" && p1 === "tenants") html = viewTenants("list");
+      else if (p0 === "super" && p1 === "tenant" && p2 === "novo") html = viewTenants("form");
+      else if (p0 === "super" && p1 === "tenant") html = viewTenants("detail", p2);
+      else if (p0 === "portal" && p1) html = viewPortal(true);
+      else if (p0 === "portal") html = viewPortal(false);
+      else if (p0 === "integracoes") html = viewIntegracoes();
+      else if (p0 === "white-label") html = viewWhiteLabel();
+      else html = viewSitemap();
+
+      $("#content").innerHTML = html;
+      bindContent();
+    }
+
+    function bindContent() {
+      $all("[data-go]").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (el.dataset.persona) {
+            state.persona = el.dataset.persona;
+            $("#persona-select").value = state.persona;
+          }
+          go(el.dataset.go || el.getAttribute("href"));
+        });
+      });
+      $all("[data-open-task]").forEach((el) => {
+        el.addEventListener("click", () => openDrawer(el.dataset.openTask));
+      });
+      const emptyBtn = $("#empty-new-task");
+      if (emptyBtn) emptyBtn.onclick = openQuickTaskModal;
+      const saveFull = $("#save-task-full");
+      if (saveFull) saveFull.onclick = () => {
+        state.emptyKanban = false;
+        const id = Math.max(...state.tasks.map((t) => t.id)) + 1;
+        state.tasks.unshift({
+          id, title: "Tarefa completa", client: "Educ", service: "Reels Instagram",
+          status: "a_fazer", priority: "media", due: "Amanhã", late: false,
+          owners: ["Ana"], phase: null, hours: 0, costHour: 70,
+          checklist: [["Briefing", false], ["Arte", false]], briefing: "Criada no formulário completo.",
+        });
+        go("#/kanban");
+      };
+      const wl = $("#wl-color");
+      if (wl) {
+        wl.oninput = () => { state.wlColor = wl.value; $("#wl-preview").style.background = wl.value; };
+      }
+      const addH = $("#add-holiday");
+      if (addH) addH.onclick = () => {
+        state.holidays.push({ date: "25/12/2026", name: "Natal" });
+        route();
+      };
+    }
+
+    // Global binds
+    document.body.addEventListener("click", (e) => {
+      const goEl = e.target.closest("[data-go]");
+      if (goEl && !goEl.closest("#content")) {
+        e.preventDefault();
+        if (goEl.dataset.persona) state.persona = goEl.dataset.persona;
+        go(goEl.dataset.go);
+      }
+    });
+
+    $("#btn-new-task").onclick = openQuickTaskModal;
+    $("#btn-notif").onclick = (e) => {
+      e.stopPropagation();
+      state.notifOpen = !state.notifOpen;
+      $("#notif-panel").classList.toggle("open", state.notifOpen);
+    };
+    document.addEventListener("click", () => {
+      $("#notif-panel").classList.remove("open");
+      state.notifOpen = false;
+    });
+    $("#notif-panel").addEventListener("click", (e) => e.stopPropagation());
+    $("#btn-profile").onclick = () => go("#/perfil");
+    $("#persona-select").onchange = () => {
+      state.persona = $("#persona-select").value;
+      if (state.persona === "super") go("#/super/tenants");
+      else route();
+    };
+    $("#drawer-root").addEventListener("click", (e) => {
+      if (e.target === $("#drawer-root")) closeDrawer();
+    });
+    $("#modal-root").addEventListener("click", (e) => {
+      if (e.target === $("#modal-root")) $("#modal-root").classList.remove("open");
+    });
+
+    $("#wizard-prev").onclick = () => {
+      if (state.wizardStep > 1) {
+        state.wizardStep -= 1;
+        go("#/wizard/" + state.wizardStep);
+      }
+    };
+    $("#wizard-next").onclick = () => {
+      if (state.wizardStep < 5) {
+        state.wizardStep += 1;
+        go("#/wizard/" + state.wizardStep);
+      } else {
+        state.emptyKanban = true;
+        state.persona = "admin";
+        go("#/kanban?empty=1");
+      }
+    };
+
+    setInterval(() => {
+      if ($("#drawer-root").classList.contains("open") && state.timerPhase !== "Pausado") {
+        state.timerSeconds += 1;
+        const pill = $("#timer-pill");
+        if (pill) pill.textContent = `${fmtTimer(state.timerSeconds)} ${state.timerPhase}`;
+      }
+    }, 1000);
+
+    window.addEventListener("hashchange", route);
+    if (!location.hash) location.hash = "#/login";
+    else route();
+  })();
+  </script>
+</body>
+</html>

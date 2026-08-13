@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestor Job — Identidade Visual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --moss: #204038;
+      --moss-soft: #e6efec;
+      --moss-mid: #3a6358;
+      --orange: #F06820;
+      --orange-soft: #fff0e8;
+      --orange-mid: #f48a4d;
+      --ink: #1a2220;
+      --muted: #5a6561;
+      --faint: #8a948f;
+      --line: #d5ddd9;
+      --line-strong: #b7c2bd;
+      --bg: #f3f6f4;
+      --surface: #ffffff;
+      --warn: #b86a14;
+      --warn-soft: #fff4e5;
+      --danger: #b42318;
+      --danger-soft: #fdecea;
+      --ok: #204038;
+      --radius: 10px;
+      --font: "Nunito", system-ui, sans-serif;
+      --space: 1.15;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 70% 45% at 0% 0%, rgba(32,64,56,.08), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 100% 10%, rgba(240,104,32,.07), transparent 50%),
+        var(--bg);
+      line-height: var(--space);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 36px 22px 80px; }
+    h1 { margin: 0 0 8px; font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--moss); }
+    h2 { margin: 40px 0 12px; font-size: 1.35rem; font-weight: 800; color: var(--moss); letter-spacing: -0.02em; }
+    h3 { margin: 0 0 8px; font-size: 1rem; font-weight: 700; }
+    p { margin: 0 0 12px; color: var(--muted); max-width: 70ch; }
+    a { color: var(--orange); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 28px 0 8px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 8px;
+    }
+    .logo-hero {
+      display: flex;
+      justify-content: center;
+      padding: 28px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 4px);
+    }
+    .logo-hero img { max-width: min(520px, 100%); height: auto; }
+    .tag { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 700; color: var(--moss); background: var(--moss-soft); padding: 4px 10px; border-radius: 999px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media (max-width: 800px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .panel.center { text-align: center; }
+    .panel img { max-width: 100%; height: auto; }
+    .swatch {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .swatch .chip { height: 88px; }
+    .swatch .meta { padding: 10px 12px; font-size: .85rem; }
+    .swatch strong { display: block; color: var(--ink); }
+    .swatch span { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: .78rem; }
+    .type-sample { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .type-sample:last-child { border-bottom: 0; }
+    .type-sample .label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 700; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn {
+      appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 700;
+      border-radius: 999px; padding: 10px 16px; font-size: .9rem;
+    }
+    .btn-primary { background: var(--orange); color: #fff; }
+    .btn-secondary { background: var(--moss); color: #fff; }
+    .btn-ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--moss); }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .75rem; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+      border: 1px solid var(--line-strong); background: #f7f9f8; color: var(--muted);
+    }
+    .pill.on { background: var(--moss-soft); border-color: #b7d0c6; color: var(--moss); }
+    .pill.action { background: var(--orange-soft); border-color: #f5c4a4; color: var(--orange); }
+    .pill.danger { background: var(--danger-soft); border-color: #f0b4b0; color: var(--danger); }
+    .pill.warn { background: var(--warn-soft); border-color: #f0d2a0; color: var(--warn); }
+    .kcard {
+      border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px; background: #fbfcfb; text-align: left;
+    }
+    .kcard.late { border-color: var(--danger); box-shadow: inset 3px 0 0 var(--danger); }
+    .kcard .t { font-weight: 700; font-size: .9rem; display: flex; gap: 7px; align-items: center; }
+    .kcard .m { font-size: .78rem; color: var(--faint); margin-top: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .dot.urgente { background: var(--danger); }
+    .dot.alta { background: var(--warn); }
+    .dot.media { background: var(--moss); }
+    .dot.baixa { background: var(--line-strong); }
+    .stat { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; background: var(--surface); }
+    .stat .v { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--moss); }
+    .stat .l { font-size: .78rem; color: var(--muted); }
+    .stat.action .v { color: var(--orange); }
+    .stat.danger .v { color: var(--danger); }
+    .timeline {
+      display: flex; align-items: center; gap: 0; justify-content: center; padding: 18px 8px;
+    }
+    .timeline .arc {
+      width: 4px; height: 72px; border-radius: 999px;
+      background: linear-gradient(180deg, var(--moss), var(--orange));
+      position: relative;
+    }
+    .timeline .arc::before, .timeline .arc::after {
+      content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .timeline .arc::before { top: -2px; background: var(--moss); }
+    .timeline .arc::after { bottom: -2px; background: var(--orange); }
+    .timeline .mid {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: 8px; height: 8px; border-radius: 50%; background: var(--moss-mid);
+    }
+    .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .do-dont { grid-template-columns: 1fr; } }
+    .do { border-left: 3px solid var(--moss); }
+    .dont { border-left: 3px solid var(--danger); }
+    ul.clean { margin: 0; padding-left: 18px; color: var(--muted); }
+    ul.clean li { margin: 4px 0; }
+    .token { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; background: #eef2f0; padding: 2px 6px; border-radius: 4px; color: var(--moss); }
+    footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: .85rem; color: var(--faint); }
+    .wordmark {
+      display: inline-flex; align-items: center; gap: 10px; font-size: 1.65rem; line-height: 1;
+    }
+    .wordmark .g { color: var(--moss); font-weight: 500; }
+    .wordmark .j { color: var(--orange); font-weight: 800; }
+    .wordmark .curve {
+      width: 3px; height: 1.55em; border-radius: 999px;
+      background: var(--moss);
+      transform: rotate(12deg);
+      align-self: stretch;
+    }
+    .wordmark-block { display: inline-grid; gap: 4px; justify-items: center; }
+    .slogan { display: flex; gap: 18px; font-size: .62rem; letter-spacing: .14em; font-weight: 700; }
+    .slogan .o { color: var(--moss); }
+    .slogan .d { color: var(--orange); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div><span class="tag">Brand kit · Gestor Job</span></div>
+      <h1>Organize. Descomplique.</h1>
+      <p>
+        Identidade visual aprovada para o protótipo hi-fi.
+        Verde musgo sustenta estrutura e controle; laranja impulsiona ação e entrega.
+        O arco entre as palavras é a borda de um relógio — linha do tempo do job.
+      </p>
+      <p>
+        Protótipo navegável:
+        <a href="prototipo-hifi.html">prototipo-hifi.html</a>
+        · Lo-fi de referência:
+        <a href="../02-lofi/prototipo-lofi.html">prototipo-lofi.html</a>
+      </p>
+    </div>
+
+    <h2>1. Logotipo</h2>
+    <div class="logo-hero">
+      <img src="assets/brand/logo-opcao-1.png" alt="Gestor Job — opção 1 (principal)" />
+    </div>
+    <div class="grid-2" style="margin-top:14px">
+      <div class="panel center">
+        <h3>Opção 1 — principal</h3>
+        <img src="assets/brand/logo-opcao-1.png" alt="Opção 1" style="max-width:320px;margin:12px 0" />
+        <p style="margin:0;font-size:.9rem">Slogan bipartido: ORGANIZE (verde) sob Gestor · DESCOMPLIQUE (laranja) sob Job. Preferida para login, onboarding e materiais.</p>
+      </div>
+      <div class="panel center">
+        <h3>Opção 2 — compacta</h3>
+        <img src="assets/brand/logo-opcao-2.png" alt="Opção 2" style="max-width:320px;margin:12px 0" />
+        <p style="margin:0;font-size:.9rem">Slogan único em verde com bullet. Uso em headers estreitos e documentos densos.</p>
+      </div>
+    </div>
+
+    <h2>2. Construção tipográfica</h2>
+    <div class="panel">
+      <div class="wordmark-block" style="margin:12px 0 20px">
+        <div class="wordmark">
+          <span class="g">Gestor</span>
+          <span class="curve" aria-hidden="true"></span>
+          <span class="j">Job</span>
+        </div>
+        <div class="slogan">
+          <span class="o">ORGANIZE</span>
+          <span class="d">DESCOMPLIQUE</span>
+        </div>
+      </div>
+      <ul class="clean">
+        <li><strong>Gestor</strong> — peso regular/medium: gestão sem peso visual excessivo.</li>
+        <li><strong>Job</strong> — bold: força do trabalho e da entrega.</li>
+        <li><strong>Arco</strong> — curva vertical (timeline / relógio); o “J” nasce por trás da curva.</li>
+        <li><strong>Slogan</strong> — organizar para que o job seja descomplicado.</li>
+      </ul>
+    </div>
+
+    <h2>3. Paleta</h2>
+    <div class="grid-4">
+      <div class="swatch"><div class="chip" style="background:#204038"></div><div class="meta"><strong>Verde musgo</strong><span>#204038 · --moss</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#F06820"></div><div class="meta"><strong>Laranja ação</strong><span>#F06820 · --orange</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#e6efec"></div><div class="meta"><strong>Moss soft</strong><span>#E6EFEC · --moss-soft</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#fff0e8"></div><div class="meta"><strong>Orange soft</strong><span>#FFF0E8 · --orange-soft</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#1a2220"></div><div class="meta"><strong>Ink</strong><span>#1A2220 · --ink</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#f3f6f4"></div><div class="meta"><strong>Background</strong><span>#F3F6F4 · --bg</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#b86a14"></div><div class="meta"><strong>Warn</strong><span>#B86A14 · --warn</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#b42318"></div><div class="meta"><strong>Danger</strong><span>#B42318 · --danger</span></div></div>
+    </div>
+    <p style="margin-top:12px">Papéis: <span class="token">moss</span> = navegação, OK, estrutura · <span class="token">orange</span> = CTAs, timer ativo, progresso · danger/warn = atraso e alerta operacional.</p>
+
+    <h2>4. Tipografia</h2>
+    <div class="panel">
+      <div class="type-sample"><div class="label">Display / marca</div><div style="font-size:2rem;font-weight:800;color:var(--moss)">Gestor<span style="color:var(--orange)">Job</span></div></div>
+      <div class="type-sample"><div class="label">H1 — 800</div><div style="font-size:1.75rem;font-weight:800">Kanban operacional</div></div>
+      <div class="type-sample"><div class="label">H2 — 700</div><div style="font-size:1.25rem;font-weight:700">Margem real por cliente</div></div>
+      <div class="type-sample"><div class="label">Body — 500</div><div style="font-size:1rem;font-weight:500;color:var(--muted)">Fee − (Σ horas × custo/hora) = margem do mês.</div></div>
+      <div class="type-sample"><div class="label">Caption — 700 caps</div><div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:var(--moss)">ORGANIZE · DESCOMPLIQUE</div></div>
+      <p style="margin-top:12px;margin-bottom:0">Família: <strong>Nunito</strong> (400–800). Evitar Inter, Roboto e Arial como face principal.</p>
+    </div>
+
+    <h2>5. Componentes</h2>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Botões</h3>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-primary" type="button">+ Tarefa</button>
+          <button class="btn btn-secondary" type="button">Salvar</button>
+          <button class="btn btn-ghost" type="button">Cancelar</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Pills / badges</h3>
+        <div class="btn-row" style="margin-top:10px">
+          <span class="pill on">Em execução</span>
+          <span class="pill action">● 00:42 Produção</span>
+          <span class="pill warn">Alta</span>
+          <span class="pill danger">Atrasado</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Card Kanban</h3>
+        <div class="kcard" style="margin-top:8px">
+          <div class="t"><span class="dot media"></span> Reels — Cliente Educ</div>
+          <div class="m">Prazo hoje · Ana</div>
+        </div>
+        <div class="kcard late" style="margin-top:8px">
+          <div class="t"><span class="dot urgente"></span> Folder — Cliente C</div>
+          <div class="m">Atrasado · 2 dias</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Stats</h3>
+        <div class="grid-2" style="margin-top:8px">
+          <div class="stat"><div class="v">12</div><div class="l">No prazo</div></div>
+          <div class="stat danger"><div class="v">3</div><div class="l">Atrasadas</div></div>
+          <div class="stat action"><div class="v">R$ 8,2k</div><div class="l">Margem do mês</div></div>
+          <div class="stat"><div class="v">86%</div><div class="l">Capacidade</div></div>
+        </div>
+      </div>
+    </div>
+
+    <h2>6. Motivo timeline</h2>
+    <div class="panel">
+      <p>O arco do logo vira progressão início → meio → fim (login, wizard, empty states).</p>
+      <div class="timeline">
+        <div style="text-align:right;padding-right:14px;font-size:.85rem;color:var(--moss);font-weight:700">Início<br /><span style="font-weight:500;color:var(--muted)">Briefing</span></div>
+        <div class="arc"><span class="mid"></span></div>
+        <div style="text-align:left;padding-left:14px;font-size:.85rem;color:var(--orange);font-weight:700">Fim<br /><span style="font-weight:500;color:var(--muted)">Entrega</span></div>
+      </div>
+    </div>
+
+    <h2>7. Tom de voz</h2>
+    <div class="panel">
+      <ul class="clean">
+        <li>Direto e operacional — frases curtas, verbos de ação.</li>
+        <li>Slogan: <strong>Organize · Descomplique</strong> — gestão = organizar; job = descomplicar.</li>
+        <li>Evitar jargão de “suite enterprise”; preferir linguagem de agência.</li>
+      </ul>
+    </div>
+
+    <h2>8. Do’s / Don’ts</h2>
+    <div class="do-dont">
+      <div class="panel do">
+        <h3>Faça</h3>
+        <ul class="clean">
+          <li>Manter contraste Gestor (moss) × Job (orange).</li>
+          <li>Usar laranja só em ações e timer.</li>
+          <li>Respeitar área livre ao redor do logo ≈ altura do “G”.</li>
+          <li>Aplicar o arco em progressões, não como ornamentação aleatória.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <h3>Não faça</h3>
+        <ul class="clean">
+          <li>Inverter cores do wordmark.</li>
+          <li>Alongar ou achatar o arco.</li>
+          <li>Usar roxo/glow genérico de UI “AI”.</li>
+          <li>Transformar atraso em coluna do Kanban.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>9. Mapa do protótipo hi-fi</h2>
+    <div class="panel">
+      <ul class="clean">
+        <li>Auth: login, convite, recuperar senha, wizard, empty state</li>
+        <li>Super Admin: tenants lista / form / detalhe</li>
+        <li>Tarefas: Kanban, Lista, Calendário, criar, drawer, timer, recorrência</li>
+        <li>Cadastros: clientes, serviços, colaboradores</li>
+        <li>Inteligência: dashboard + relatórios</li>
+        <li>Config: permissões, blocos, feriados</li>
+        <li>Fase 3: portal cliente, integrações, white-label</li>
+      </ul>
+      <p style="margin-top:12px;margin-bottom:0">Abra o app: <a href="prototipo-hifi.html">prototipo-hifi.html</a></p>
+    </div>
+
+    <footer>
+      Assets em <span class="token">assets/brand/</span> · Fonte tipográfica Nunito · Cores amostradas do PDF do cliente.
+    </footer>
+  </div>
+</body>
+</html>
