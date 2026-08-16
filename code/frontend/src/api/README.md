@@ -1,3 +1,3 @@
 # api
 
-Conexão com o backend (client HTTP, baseURL, interceptors).
+Conexão com o backend (Axios, baseURL `/api/v1`, interceptor Bearer).

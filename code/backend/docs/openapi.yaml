@@ -1,5 +1,871 @@
 openapi: 3.0.3
 info:
-  title: API <slug>
-  version: 0.1.0
-paths: {}
+  title: Gestor Job API
+  version: 0.6.0
+  description: |
+    API do Gestor Job (SaaS multi-tenant para agências).
+    F6 — Health com check de database (503 se falhar); deploy CI/self-hosted.
+    F5 — Policies por recurso (403 papel / 404 não visível), headers CSP, CORS só FRONTEND_URL em prod, throttle login.
+    F3 — Kanban + timer por fase (Análise→Produção→Revisão→Correção). Atraso = badge.
+servers:
+  - url: http://localhost:8000/api/v1
+tags:
+  - name: System
+  - name: Auth
+  - name: Empresas
+  - name: Clientes
+  - name: Servicos
+  - name: Colaboradores
+  - name: Tarefas
+  - name: Config
+  - name: Relatorios
+components:
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+  schemas:
+    Envelope:
+      type: object
+      required: [success, data, message, errors]
+      properties:
+        success: { type: boolean }
+        data: {}
+        message: { type: string }
+        errors: { type: array, items: { type: string } }
+    Cliente:
+      type: object
+      properties:
+        id: { type: integer }
+        empresa_id: { type: integer }
+        nome_fantasia: { type: string, example: Educ }
+        cnpj: { type: string, example: '11222333000181' }
+        fee_mensal: { type: number, example: 8000 }
+        status: { type: string, enum: [ativo, inativo, prospect] }
+    Servico:
+      type: object
+      properties:
+        id: { type: integer }
+        nome: { type: string, example: Reels Instagram }
+        preco_venda: { type: number }
+        checklist_padrao:
+          type: array
+          items: { type: string }
+    Tarefa:
+      type: object
+      properties:
+        id: { type: integer }
+        titulo: { type: string }
+        status:
+          type: string
+          enum: [a_fazer, execucao, revisao, cliente, aprovado, concluido]
+        prioridade:
+          type: string
+          enum: [urgente, alta, media, baixa]
+        atrasada: { type: boolean }
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      tags: [System]
+      summary: Health check da API (inclui database)
+      responses:
+        '200':
+          description: API operacional — data.status=ok e checks.database=ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '503':
+          description: Banco indisponível — data.status=degraded
+  /auth/login:
+    post:
+      operationId: login
+      tags: [Auth]
+      summary: Login e emissão de token Bearer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: mariana@agenciaeduc.local }
+                password: { type: string, example: password }
+                device_name: { type: string, example: spa }
+      responses:
+        '200':
+          description: Token + usuário (inclui empresa do tenant)
+        '422':
+          description: Credenciais inválidas
+  /auth/me:
+    get:
+      operationId: me
+      tags: [Auth]
+      summary: Usuário autenticado
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Perfil (inclui permissoes efetivas do papel + config do tenant) }
+        '401': { description: Sem token ou token inválido }
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [Auth]
+      summary: Revoga o token atual
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Token apagado }
+        '401': { description: Sem token }
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [Auth]
+      summary: Rotaciona o token (o anterior deixa de valer)
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Novo token }
+        '401': { description: Sem token }
+  /auth/senha:
+    post:
+      operationId: alterarSenha
+      tags: [Auth]
+      summary: Usuário autenticado troca a própria senha (exige senha atual)
+      security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [senha_atual, password, password_confirmation]
+              properties:
+                senha_atual: { type: string }
+                password: { type: string, minLength: 8 }
+                password_confirmation: { type: string }
+      responses:
+        '200': { description: Senha atualizada }
+        '401': { description: Sem token }
+        '422': { description: Senha atual não confere }
+  /wizard:
+    get:
+      operationId: getWizard
+      tags: [Auth]
+      summary: Status do wizard de onboarding (passos + pendente)
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: pendente + lista de passos }
+        '401': { description: Sem token }
+  /wizard/concluir:
+    post:
+      operationId: concluirWizard
+      tags: [Auth]
+      summary: Admin marca o onboarding da agência como concluído
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: user atualizado (wizard_pendente=false) }
+        '401': { description: Sem token }
+        '422': { description: Não é admin da agência }
+  /notificacoes:
+    get:
+      operationId: listNotificacoes
+      tags: [Notificacoes]
+      summary: Lista notificações in-app do usuário
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Lista (não lidas primeiro) }
+        '401': { description: Sem token }
+        '403': { description: Super Admin não usa sino de tenant }
+  /notificacoes/nao-lidas:
+    get:
+      operationId: countNotificacoesNaoLidas
+      tags: [Notificacoes]
+      summary: Contador de não lidas (badge)
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: '{ total }' }
+  /notificacoes/ler-todas:
+    post:
+      operationId: marcarTodasNotificacoes
+      tags: [Notificacoes]
+      summary: Marca todas como lidas
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: OK }
+  /notificacoes/{notificacao}/lida:
+    post:
+      operationId: marcarNotificacaoLida
+      tags: [Notificacoes]
+      summary: Marca uma notificação como lida
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: notificacao
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Notificação atualizada }
+        '404': { description: Não é do usuário }
+  /auth/recuperar-senha:
+    post:
+      operationId: solicitarRecuperacaoSenha
+      tags: [Auth]
+      summary: Solicita link de recuperação (422 se o e-mail não existir)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200':
+          description: Link enviado; em local/testing pode incluir reset_url
+        '422': { description: E-mail inválido ou não cadastrado }
+  /auth/redefinir-senha:
+    post:
+      operationId: redefinirSenha
+      tags: [Auth]
+      summary: Redefine a senha com o token do e-mail (uso único, 60 min)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password, password_confirmation]
+              properties:
+                token: { type: string }
+                password: { type: string, minLength: 8 }
+                password_confirmation: { type: string }
+      responses:
+        '200': { description: Senha atualizada; tokens Sanctum revogados }
+        '422': { description: Token inválido/expirado ou senha fraca }
+  /empresas:
+    get:
+      operationId: listEmpresas
+      tags: [Empresas]
+      summary: Lista agências (somente super_admin)
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Lista de empresas }
+        '401': { description: Sem token }
+        '403': { description: Não é super_admin }
+    post:
+      operationId: createEmpresa
+      tags: [Empresas]
+      summary: Super Admin cria agência e envia convite ao admin
+      security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, plano, limite_usuarios, admin_nome, admin_email]
+              properties:
+                nome: { type: string }
+                plano: { type: string, enum: [starter, pro, enterprise] }
+                limite_usuarios: { type: integer }
+                admin_nome: { type: string }
+                admin_email: { type: string }
+      responses:
+        '201': { description: Empresa + admin + convite_url }
+        '401': { description: Sem token }
+        '403': { description: Não é super_admin }
+        '422': { description: Validação }
+  /empresas/{empresa}:
+    get:
+      operationId: getEmpresaPlataforma
+      tags: [Empresas]
+      summary: Detalhe da agência (somente super_admin)
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: empresa
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Empresa + admin }
+        '403': { description: Não é super_admin }
+    put:
+      operationId: updateEmpresa
+      tags: [Empresas]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: empresa
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, plano, limite_usuarios, status]
+              properties:
+                nome: { type: string }
+                plano: { type: string, enum: [starter, pro, enterprise] }
+                limite_usuarios: { type: integer }
+                status: { type: string, enum: [ativo, trial, suspenso] }
+      responses:
+        '200': { description: Atualizado }
+        '403': { description: Não é super_admin }
+  /empresas/{empresa}/convite:
+    post:
+      operationId: reenviarConvite
+      tags: [Empresas]
+      summary: Reenvia convite se a conta ainda não foi ativada
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: empresa
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Novo convite_url }
+        '403': { description: Não é super_admin }
+        '409': { description: Conta já ativada }
+  /convites/{token}:
+    get:
+      operationId: previewConvite
+      tags: [Auth]
+      summary: Dados públicos do convite (sem senha)
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Nome, e-mail, empresa }
+        '404': { description: Token inválido }
+        '422': { description: Expirado }
+    post:
+      operationId: aceitarConvite
+      tags: [Auth]
+      summary: Admin define senha e ativa a conta
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, password, password_confirmation]
+              properties:
+                name: { type: string }
+                password: { type: string, minLength: 8 }
+                password_confirmation: { type: string }
+      responses:
+        '200': { description: Token Sanctum + user }
+        '404': { description: Token inválido }
+        '422': { description: Expirado ou senha inválida }
+  /empresa:
+    get:
+      operationId: getEmpresaAtual
+      tags: [Empresas]
+      summary: Tenant do usuário autenticado
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Empresa do usuário }
+        '401': { description: Sem token }
+        '404': { description: Super admin sem tenant }
+  /configuracao:
+    get:
+      operationId: getConfiguracao
+      tags: [Config]
+      summary: Flags do tenant (merge com defaults)
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: config + chaves editáveis pelo papel }
+        '401': { description: Sem token }
+        '403': { description: Colaborador/visualizador }
+    put:
+      operationId: updateConfiguracao
+      tags: [Config]
+      summary: Admin altera todas as flags; gerente só notif_email, notif_in_app, digest_diario
+      security: [{ sanctum: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gerente_cria_usuarios: { type: boolean }
+                colaborador_cria_tarefas: { type: boolean }
+                gerente_exclui_tarefas: { type: boolean }
+                timer_ao_abrir: { type: boolean }
+                notif_email: { type: boolean, description: 'E-mail de prazo hoje (gestor:avisos-prazo · 07:00)' }
+                notif_in_app: { type: boolean, description: 'Sino in-app (alocação, status, prazo)' }
+                digest_diario: { type: boolean }
+                colaborador_so_alocadas: { type: boolean }
+      responses:
+        '200': { description: Persistido em empresas.configuracao }
+        '401': { description: Sem token }
+        '403': { description: Sem acesso }
+  /permissoes:
+    get:
+      operationId: getPermissoes
+      tags: [Config]
+      summary: Matriz Admin/Gerente/Colaborador/Visualizador (células Config. com valor atual)
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: linhas + células }
+        '401': { description: Sem token }
+        '403': { description: Sem acesso }
+  /clientes:
+    get:
+      operationId: listClientes
+      tags: [Clientes]
+      summary: Lista clientes do tenant
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Lista isolada por empresa }
+        '401': { description: Sem token }
+    post:
+      operationId: createCliente
+      tags: [Clientes]
+      summary: Cria cliente (CNPJ único no tenant)
+      security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome_fantasia]
+              properties:
+                nome_fantasia: { type: string }
+                cnpj: { type: string, description: 'CNPJ 14 posições, numérico ou alfanumérico (IN 2.229)' }
+                fee_mensal: { type: number }
+                status: { type: string }
+      responses:
+        '201': { description: Cliente criado }
+        '401': { description: Sem token }
+        '422': { description: Validação (CNPJ duplicado no tenant) }
+  /clientes/{cliente}:
+    get:
+      operationId: getCliente
+      tags: [Clientes]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: cliente
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Cliente }
+        '404': { description: Outro tenant / inexistente }
+    put:
+      operationId: updateCliente
+      tags: [Clientes]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: cliente
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Atualizado }
+        '404': { description: Outro tenant }
+    delete:
+      operationId: deleteCliente
+      tags: [Clientes]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: cliente
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Removido }
+        '409': { description: Cliente tem tarefas — não exclui }
+  /servicos:
+    get:
+      operationId: listServicos
+      tags: [Servicos]
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Lista do tenant }
+        '401': { description: Sem token }
+    post:
+      operationId: createServico
+      tags: [Servicos]
+      security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome]
+              properties:
+                nome: { type: string }
+                preco_venda: { type: number }
+                checklist_padrao:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201': { description: Serviço criado }
+  /servicos/{servico}:
+    get:
+      operationId: getServico
+      tags: [Servicos]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: servico
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Serviço }
+        '404': { description: Outro tenant }
+    put:
+      operationId: updateServico
+      tags: [Servicos]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: servico
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Atualizado }
+    delete:
+      operationId: deleteServico
+      tags: [Servicos]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: servico
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Removido }
+        '409': { description: Serviço tem tarefas — não exclui }
+  /colaboradores:
+    get:
+      operationId: listColaboradores
+      tags: [Colaboradores]
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Users do tenant }
+        '401': { description: Sem token }
+    post:
+      operationId: createColaborador
+      tags: [Colaboradores]
+      summary: Cria user no tenant (respeita limite_usuarios)
+      security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                papel: { type: string, enum: [admin, gerente, colaborador, visualizador] }
+                custo_hora: { type: number }
+                carga_semanal_horas: { type: integer }
+                departamento: { type: string }
+                password: { type: string, minLength: 8, description: Opcional; se vazio, senha inicial padrão }
+                password_confirmation: { type: string }
+      responses:
+        '201': { description: Colaborador criado }
+        '403': { description: Papel sem permissão }
+        '422': { description: Limite de seats atingido }
+  /colaboradores/{colaborador}:
+    get:
+      operationId: getColaborador
+      tags: [Colaboradores]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: colaborador
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Colaborador do tenant }
+        '404': { description: Outro tenant }
+    put:
+      operationId: updateColaborador
+      tags: [Colaboradores]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: colaborador
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                papel: { type: string, enum: [admin, gerente, colaborador, visualizador] }
+                custo_hora: { type: number }
+                carga_semanal_horas: { type: integer }
+                departamento: { type: string }
+                password: { type: string, minLength: 8, description: Opcional; admin/gerente redefine a senha da pessoa }
+                password_confirmation: { type: string }
+      responses:
+        '200': { description: Atualizado }
+        '403': { description: Papel sem permissão }
+        '404': { description: Outro tenant }
+        '409': { description: Único admin — não troca o papel }
+    delete:
+      operationId: deleteColaborador
+      tags: [Colaboradores]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: colaborador
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Removido }
+        '403': { description: Papel sem permissão }
+        '404': { description: Outro tenant }
+        '409': { description: Tem tarefas/horas, é a própria conta ou único admin }
+  /tarefas:
+    get:
+      operationId: listTarefas
+      tags: [Tarefas]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: cliente_id
+          schema: { type: integer }
+      responses:
+        '200': { description: Kanban do tenant (colaborador/visualizador só alocadas se a flag estiver ligada) }
+        '401': { description: Sem token }
+    post:
+      operationId: createTarefa
+      tags: [Tarefas]
+      summary: Cria tarefa, sync responsáveis e herda checklist do serviço
+      security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cliente_id, titulo]
+              properties:
+                cliente_id: { type: integer }
+                servico_id: { type: integer }
+                titulo: { type: string }
+                prioridade: { type: string }
+                responsavel_ids:
+                  type: array
+                  items: { type: integer }
+      responses:
+        '201': { description: Tarefa criada }
+        '403': { description: Papel sem permissão de criar }
+  /tarefas/{tarefa}:
+    get:
+      operationId: getTarefa
+      tags: [Tarefas]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Detalhe + checklist + apontamentos + anexos }
+        '404': { description: Outro tenant }
+    put:
+      operationId: updateTarefa
+      tags: [Tarefas]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+                titulo: { type: string }
+                prioridade: { type: string }
+      responses:
+        '200': { description: Atualizada }
+        '404': { description: Outro tenant ou não alocada }
+    delete:
+      operationId: deleteTarefa
+      tags: [Tarefas]
+      summary: Exclui se o papel puder e a tarefa não tiver apontamentos
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Removida }
+        '403': { description: Sem permissão }
+        '404': { description: Outro tenant ou não alocada }
+        '409': { description: Tem horas apontadas }
+  /tarefas/{tarefa}/anexos:
+    post:
+      operationId: uploadAnexoTarefa
+      tags: [Tarefas]
+      summary: Anexa arquivo privado no disco anexos (PDF, imagem, Word, Excel · 10 MB)
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [arquivo]
+              properties:
+                arquivo: { type: string, format: binary }
+      responses:
+        '201': { description: Tarefa com lista de anexos (sem path) }
+        '401': { description: Sem token }
+        '403': { description: Visualizador }
+        '404': { description: Outro tenant ou não alocada }
+        '422': { description: Tipo/tamanho inválido }
+  /tarefas/{tarefa}/anexos/{anexo}/download:
+    get:
+      operationId: downloadAnexoTarefa
+      tags: [Tarefas]
+      summary: Download autenticado (arquivo não é público)
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: anexo
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Binário }
+        '401': { description: Sem token }
+        '404': { description: Outro tenant ou arquivo ausente }
+  /tarefas/{tarefa}/anexos/{anexo}:
+    delete:
+      operationId: deleteAnexoTarefa
+      tags: [Tarefas]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: anexo
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Removido do banco e do disco }
+        '403': { description: Visualizador }
+        '404': { description: Outro tenant }
+  /tarefas/{tarefa}/timer:
+    post:
+      operationId: iniciarTimer
+      tags: [Tarefas]
+      summary: Inicia, retoma a mesma fase (play) ou troca de fase (relógio zera na nova)
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fase]
+              properties:
+                fase: { type: string, enum: [analise, producao, revisao, correcao] }
+      responses:
+        '200': { description: Timer em andamento; play na mesma fase acumula; outra fase zera o relógio }
+        '401': { description: Sem token }
+        '404': { description: Outro tenant }
+        '422': { description: Já existe timer em outra tarefa }
+  /tarefas/{tarefa}/timer/pausar:
+    post:
+      operationId: pausarTimer
+      tags: [Tarefas]
+      summary: Encerra o apontamento aberto e grava os segundos
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Timer pausado }
+        '401': { description: Sem token }
+        '422': { description: Sem timer aberto }
+  /tarefas/{tarefa}/checklist/{item}:
+    put:
+      operationId: atualizarChecklist
+      tags: [Tarefas]
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: tarefa
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: item
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [feito]
+              properties:
+                feito: { type: boolean }
+      responses:
+        '200': { description: Item marcado }
+  /relatorios/margem:
+    get:
+      operationId: getMargem
+      tags: [Relatorios]
+      summary: Fee − (Σ horas × custo/hora) no mês
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: query
+          name: competencia
+          schema: { type: string, example: '2026-08' }
+      responses:
+        '200': { description: Linhas por cliente ativo }
+        '401': { description: Sem token }
+        '403': { description: Papel sem financeiro (colaborador/visualizador) }

@@ -1,66 +1,21 @@
-# F4 Módulos
+# F4 Módulos — `gestor-job` (fechada)
 
-**Objetivo:** Um módulo por ciclo (BE + FE). E2E por módulo entregue.
+**Fase F4 concluída** (ciclos 1–9). Telas MVP do mapa + notif in-app/e-mail. Calendário/feriados/dashboard margem = **fase 2 do produto** (fora desta F4).
 
-## Arquivos
+## Ciclo 9 (fechado) — E-mail de prazo
 
-- módulo atual + testes API + Playwright do módulo
+`gestor:avisos-prazo` enfileira `PrazoHojeMail`; flag `notif_email`; idempotência `emails_prazo_enviados`.
 
-## Critério de done
+Smoke operador: **OK 2026-08-15**. Automático: PHPUnit **89** · Playwright **15** · build OK.
 
-- [ ] Escopo da fase implementado
-- [ ] Suite E2E da fase **verde** (agente executou)
-- [ ] Roteiro manual preenchido (seeds, URLs, passos)
-- [ ] OpenAPI atualizado (se API)
-- [ ] LESSONS.md da fase + sync KB
-- [ ] Feature de cada módulo afirma efeito (DB / fake), não só HTTP 200
-- [ ] Listagens com relação: `with()`; índices se filtro novo
-- [ ] UX do módulo: CTA verbo, toast no topo, submit “Processando…”
+## Ciclos
 
-## Suite E2E (automática) — gate
+| # | Escopo | Status |
+|---|--------|--------|
+| 1–8 | Lista, CRUD, Super Admin, config, anexos, recuperar senha, wizard, notif in-app | **fechado** |
+| 9 | E-mail de prazo (`notif_email`) | **fechado** (smoke OK 2026-08-15) |
+| fase 2 | Calendário, feriados, dashboard margem | depois (produto) |
 
-Regra: `educraft-devkit/standards/TESTES-FASE.md`
+## Próximo
 
-| # | Cenário (tudo o que esta fase entregou) | Arquivo de teste | OK? |
-|---|-----------------------------------------|------------------|-----|
-| 1 | | | [ ] |
-
-**Comandos (agente roda e cola o resultado):**
-
-```bash
-cd code/backend && php artisan test --filter=<SuiteDaFase>
-# a partir de F3 / quando houver UI:
-cd code/frontend && npx playwright test <spec-da-fase>
-```
-
-Fase **bloqueada** se qualquer cenário falhar. Não liberar teste manual.
-
-## Como testar manualmente (só após E2E verde)
-
-### Preparar
-
-```bash
-cd code/backend
-php artisan migrate:fresh --seed
-php artisan serve
-```
-
-```bash
-cd code/frontend
-npm run dev
-```
-
-| Item | Valor |
-|------|--------|
-| URL API | http://localhost:8000 |
-| URL FE | http://localhost:5173 |
-| Usuário seed | |
-| Senha seed | |
-
-### Passos
-
-1. …
-
-### Esperado
-
-- …
+**F5 Hardening** — `04-build/phases/F5-hardening.md`
