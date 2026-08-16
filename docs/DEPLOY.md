@@ -8,9 +8,18 @@ Padrão Educraft (igual **nfse-empresa**): [educraft-devkit/standards/DEPLOY-GIT
 | Item | Valor |
 |------|--------|
 | Domínio | https://app.gestorjob.com.br |
-| EC2 | `3.87.91.219` (origem; DNS via Cloudflare) |
+| EC2 | `34.224.58.173` (origem; DNS via Cloudflare) |
 | Path | `/var/www/gestorjob` |
 | Stack | Laravel API (`code/backend`) + SPA (`code/frontend/dist`) no mesmo host (`/api` → PHP-FPM) |
+
+## Automação no servidor (os dois)
+
+| Mecanismo | O que faz | Como está |
+|-----------|-----------|-----------|
+| **crontab** `* * * * * php artisan schedule:run` | Dispara o scheduler Laravel (ex.: `gestor:avisos-prazo` às 07:00) | instalado no user `ubuntu` |
+| **systemd** `gestorjob-queue` | `php artisan queue:work database` — processa e-mails/jobs da fila | `enabled` + `active` |
+
+Sem o cron, o schedule não roda. Sem o worker, e-mails/jobs ficam parados na tabela `jobs`.
 
 ## Fluxo
 
@@ -83,8 +92,8 @@ Labels `self-hosted`, `Linux`, `X64` — status **Idle**.
 3. `php artisan key:generate`
 4. Nginx: `deploy/nginx/app.gestorjob.com.br.conf` → sites-enabled + `certbot --nginx`
 5. Queue: `deploy/systemd/gestorjob-queue.service`
-6. Cloudflare: registro **A** `app` → `3.87.91.219` (proxied OK); SSL Full ou Full (strict) após Let’s Encrypt
-7. Security Group: porta **22** só no IP `/32` do admin
+7. Cloudflare: registro **A** `app` → IP público atual da EC2 (proxied OK); SSL Full ou Full (strict)
+8. Security Group: porta **22** só no IP `/32` do admin
 
 ```env
 APP_ENV=production
