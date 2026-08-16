@@ -19,6 +19,7 @@ class CriarTarefa
             : null;
 
         $tarefa = Tarefa::query()->create([
+            'empresa_id' => $dados['empresa_id'] ?? null,
             'cliente_id' => $dados['cliente_id'],
             'servico_id' => $dados['servico_id'] ?? null,
             'titulo' => $dados['titulo'],
@@ -27,6 +28,8 @@ class CriarTarefa
             'prazo_em' => $dados['prazo_em'] ?? null,
             'briefing' => $dados['briefing'] ?? null,
             'recorrente' => (bool) ($dados['recorrente'] ?? false),
+            'recorrencia_id' => $dados['recorrencia_id'] ?? null,
+            'ocorrencia_em' => $dados['ocorrencia_em'] ?? null,
         ]);
 
         $ids = $dados['responsavel_ids'] ?? [];

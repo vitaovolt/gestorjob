@@ -1,20 +1,28 @@
 # Amazon SES + Cloudflare — Gestor Job
 
-Região: **us-east-1**  
-Domínio: **gestorjob.com.br**  
-Remetente: `noreply@gestorjob.com.br`
+Padrão Educraft: [educraft-devkit/standards/SES-CLOUDFLARE.md](../educraft-devkit/standards/SES-CLOUDFLARE.md).
 
-## 1) Registros no Cloudflare (DNS)
+| Item | Valor |
+|------|--------|
+| Conta AWS | **`205472166347`** (mesma da EC2) |
+| Região | `us-east-1` |
+| Domínio | `gestorjob.com.br` |
+| Remetente | `noreply@gestorjob.com.br` |
+| Produção | Pedido de saída SES feito em **2026-08-16** (aguardar aprovação AWS) |
 
-Tipo **CNAME**, Proxy = **DNS only** (nuvem cinza) — DKIM/MAIL FROM não funcionam com proxy laranja.
+> Tokens DKIM são **por conta**. Se recriar a identidade SES, substitua os 3 CNAMEs abaixo.
+
+## Registros Cloudflare (preencher após Create identity na conta certa)
+
+Tipo **CNAME**, Proxy = **DNS only** (nuvem cinza).
 
 ### DKIM (3 registros)
 
 | Nome | Destino |
 |------|---------|
-| `2zcptobgi7yonagg2uqecqkjenlxuwtu._domainkey` | `2zcptobgi7yonagg2uqecqkjenlxuwtu.dkim.amazonses.com` |
-| `os46xbwwvqxhn5oojw5jxj2i6lktdflo._domainkey` | `os46xbwwvqxhn5oojw5jxj2i6lktdflo.dkim.amazonses.com` |
-| `pyp3h4gzf3wurhzye6wzvqnydsbmoiwq._domainkey` | `pyp3h4gzf3wurhzye6wzvqnydsbmoiwq.dkim.amazonses.com` |
+| `TOKEN._domainkey` | `TOKEN.dkim.amazonses.com` |
+| `TOKEN._domainkey` | `TOKEN.dkim.amazonses.com` |
+| `TOKEN._domainkey` | `TOKEN.dkim.amazonses.com` |
 
 ### MAIL FROM (`mail.gestorjob.com.br`)
 
@@ -27,35 +35,10 @@ Tipo **CNAME**, Proxy = **DNS only** (nuvem cinza) — DKIM/MAIL FROM não funci
 
 | Tipo | Nome | Conteúdo |
 |------|------|----------|
-| TXT | `@` | `v=spf1 include:amazonses.com ~all` *(se já existir SPF, só acrescente `include:amazonses.com` no registro atual — não crie dois SPF)* |
+| TXT | `@` | `v=spf1 include:amazonses.com ~all` *(se já existir SPF, só acrescente `include:amazonses.com`)* |
 | TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:dmarc@gestorjob.com.br` |
 
-TTL: Auto / 5 min.
-
-## 2) Conferir verificação SES
-
-```bash
-aws sesv2 get-email-identity --email-identity gestorjob.com.br --region us-east-1 --query "{Verified:VerifiedForSendingStatus,Dkim:DkimAttributes.Status,MailFrom:MailFromAttributes.MailFromDomainStatus}"
-```
-
-Esperado: `Verified: true`, DKIM `SUCCESS`, MailFrom `SUCCESS`.
-
-## 3) Sandbox
-
-Conta ainda em **sandbox**: só envia para endereços/domínios **verificados** no SES.  
-Pedir produção: SES Console → Account dashboard → Request production access  
-(caso de uso: transactional — convite, reset senha, prazo).
-
-Enquanto sandbox: verifique um e-mail seu:
-
-```bash
-aws sesv2 create-email-identity --email-identity seu@email.com --region us-east-1
-# confirme o link que chegar na caixa
-```
-
-## 4) App (já preparado)
-
-`.env` produção:
+## App
 
 ```env
 MAIL_MAILER=ses
@@ -66,5 +49,4 @@ AWS_SECRET_ACCESS_KEY=...
 AWS_DEFAULT_REGION=us-east-1
 ```
 
-Pacote: `aws/aws-sdk-php` no backend.  
-Após alterar `.env`: `php artisan config:cache` + `sudo systemctl restart gestorjob-queue`.
+Após `.env`: `php artisan config:cache` + `sudo systemctl restart gestorjob-queue`.

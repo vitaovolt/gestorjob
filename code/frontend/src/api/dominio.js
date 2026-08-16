@@ -34,6 +34,14 @@ export const pausarTimer = (id) => client.post(`/tarefas/${id}/timer/pausar`).th
 export const atualizarChecklist = (tarefaId, itemId, feito) =>
   client.put(`/tarefas/${tarefaId}/checklist/${itemId}`, { feito }).then((r) => r.data)
 export const deleteTarefa = (id) => client.delete(`/tarefas/${id}`).then((r) => r.data)
+export const criarComentario = (tarefaId, corpo) =>
+  client.post(`/tarefas/${tarefaId}/comentarios`, { corpo }).then((r) => r.data)
+
+export const listRecorrencias = (params) => client.get('/recorrencias', { params }).then((r) => r.data)
+export const ativarRecorrencia = (payload) => client.post('/recorrencias', payload).then((r) => r.data)
+export const gerarRecorrencia = (id) => client.post(`/recorrencias/${id}/gerar`).then((r) => r.data)
+export const desativarRecorrencia = (id) => client.delete(`/recorrencias/${id}`).then((r) => r.data)
+
 /** Alinhado a TarefaAnexo::MIMES / MAX_KB no backend — allowlist fechada. */
 export const ANEXO_MAX_BYTES = 10 * 1024 * 1024
 export const ANEXO_EXTENSOES = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'gif', 'doc', 'docx', 'xls', 'xlsx']

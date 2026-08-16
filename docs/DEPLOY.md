@@ -21,6 +21,11 @@ Padrão Educraft (igual **nfse-empresa**): [educraft-devkit/standards/DEPLOY-GIT
 
 Sem o cron, o schedule não roda. Sem o worker, e-mails/jobs ficam parados na tabela `jobs`.
 
+## E-mail (Amazon SES)
+
+Padrão kit: [educraft-devkit/standards/SES-CLOUDFLARE.md](../educraft-devkit/standards/SES-CLOUDFLARE.md).  
+Tokens deste domínio: [SES-CLOUDFLARE.md](SES-CLOUDFLARE.md). Conta AWS = mesma da EC2 (`205472166347`).
+
 ## Fluxo
 
 ```

@@ -186,6 +186,8 @@ class User extends Authenticatable
             'editar_config' => $this->podeConfigurarTenant(),
             'editar_config_parcial' => $this->papel === 'gerente',
             'anexar' => $this->podeAnexarArquivos(),
+            'ver_financeiro' => $this->podeVerFinanceiro(),
+            'comentar' => $this->podeOperarTarefas(),
         ];
     }
 

@@ -4,12 +4,14 @@ use App\Http\Controllers\Api\AnexoController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\ColaboradorController;
+use App\Http\Controllers\Api\ComentarioController;
 use App\Http\Controllers\Api\ConfiguracaoController;
 use App\Http\Controllers\Api\ConviteController;
 use App\Http\Controllers\Api\EmpresaController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\MargemController;
 use App\Http\Controllers\Api\PermissaoController;
+use App\Http\Controllers\Api\RecorrenciaController;
 use App\Http\Controllers\Api\ServicoController;
 use App\Http\Controllers\Api\TarefaController;
 use App\Http\Controllers\Api\NotificacaoController;
@@ -67,6 +69,12 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         Route::post('/tarefas/{tarefa}/timer', [TarefaController::class, 'iniciarTimer']);
         Route::post('/tarefas/{tarefa}/timer/pausar', [TarefaController::class, 'pausarTimer']);
         Route::put('/tarefas/{tarefa}/checklist/{item}', [TarefaController::class, 'checklist']);
+        Route::post('/tarefas/{tarefa}/comentarios', [ComentarioController::class, 'store']);
+
+        Route::get('/recorrencias', [RecorrenciaController::class, 'index']);
+        Route::post('/recorrencias', [RecorrenciaController::class, 'store']);
+        Route::post('/recorrencias/{recorrencia}/gerar', [RecorrenciaController::class, 'gerar']);
+        Route::delete('/recorrencias/{recorrencia}', [RecorrenciaController::class, 'destroy']);
 
         Route::get('/relatorios/margem', [MargemController::class, 'index']);
     });

@@ -14,7 +14,7 @@ Prioridade: **sim** = MVP (Fase 1) · **fase2** = inteligência · **fase3** = e
 | T6 | Lista de tarefas | operação | sim |
 | T7 | Calendário de tarefas | operação | fase2 |
 | T8 | Criar tarefa | Admin / Gerente / Colab. (config) | sim |
-| T9 | Drawer da tarefa + timer + checklist | operação | sim |
+| T9 | Drawer da tarefa + timer + checklist + custo + comentários | operação | sim |
 | T10 | Super Admin — empresas | Super Admin | sim |
 | T11 | Super Admin — nova empresa / detalhe | Super Admin | sim |
 | T12 | Clientes (lista / novo / editar) | Admin / Gerente | sim |

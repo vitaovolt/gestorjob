@@ -23,6 +23,7 @@ class DeployReadinessTest extends TestCase
         $out = Artisan::output();
 
         $this->assertStringContainsString('gestor:avisos-prazo', $out);
+        $this->assertStringContainsString('gestor:gerar-recorrencias', $out);
     }
 
     public function test_env_example_tem_chaves_de_producao(): void

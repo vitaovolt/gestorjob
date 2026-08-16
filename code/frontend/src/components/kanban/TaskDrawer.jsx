@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ANEXO_ACCEPT,
   atualizarChecklist,
+  criarComentario,
   deleteAnexo,
   deleteTarefa,
   downloadAnexo,
@@ -14,7 +15,7 @@ import {
 } from '../../api/dominio'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
-import { formatarBytes, temPermissao } from '../../utils/format'
+import { formatarBRL, formatarBytes, temPermissao } from '../../utils/format'
 import ConfirmarExcluir from '../ui/ConfirmarExcluir.jsx'
 import { COLUNAS, FASES_TIMER, formatarTimer, PRIORIDADE_LABEL, segundosAbertos } from '../../pages/kanbanLabels'
 
@@ -25,9 +26,12 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
   const [busy, setBusy] = useState('')
   const [confirmarExcluir, setConfirmarExcluir] = useState(false)
   const [alvoAnexo, setAlvoAnexo] = useState(null)
+  const [comentario, setComentario] = useState('')
   const fileRef = useRef(null)
   const podeExcluir = temPermissao(user, 'excluir_tarefas')
   const podeAnexar = temPermissao(user, 'anexar')
+  const podeComentar = temPermissao(user, 'comentar')
+  const verFinanceiro = temPermissao(user, 'ver_financeiro')
   const aberto = Boolean(tarefa?.timer_aberto?.iniciado_em)
   const timer = tarefa?.timer_aberto
   const [now, setNow] = useState(() => Date.now())
@@ -45,6 +49,7 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
   const displaySeg = aberto ? baseSeg + segundosAbertos(timer, now) : baseSeg
   const labelFase = FASES_TIMER.find((f) => f.id === faseAtual)?.label || ''
   const statusTimer = aberto ? `Rodando · ${labelFase}` : faseAtual ? `Pausado · ${labelFase}` : 'Parado'
+  const comentarios = tarefa.comentarios || []
 
   async function run(chave, fn, okMsg) {
     if (actingRef.current) return
@@ -99,27 +104,30 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
     setBusy('excluir')
     try {
       await deleteTarefa(tarefa.id)
-      showToast('Tarefa removida')
-      setConfirmarExcluir(false)
-      onExcluida?.(tarefa.id)
+      showToast('Tarefa excluída')
+      onExcluida(tarefa.id)
     } catch (err) {
       actingRef.current = false
       setBusy('')
       setConfirmarExcluir(false)
-      const msg = err.response?.data?.message || 'Não foi possível excluir a tarefa.'
+      const msg = err.response?.data?.message || 'Não foi possível excluir.'
       showToast(msg, 'erro')
+      return
     }
+    actingRef.current = false
+    setBusy('')
   }
 
   async function onEnviarAnexo(event) {
     const arquivo = event.target.files?.[0]
     event.target.value = ''
-    if (!arquivo || actingRef.current) return
+    if (!arquivo) return
     const erroLocal = validarAnexoCliente(arquivo)
     if (erroLocal) {
       showToast(erroLocal, 'erro')
       return
     }
+    if (actingRef.current) return
     actingRef.current = true
     setBusy('anexo')
     try {
@@ -128,10 +136,9 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
       showToast('Arquivo anexado')
     } catch (err) {
       showToast(mensagemErroUploadAnexo(err), 'erro')
-    } finally {
-      actingRef.current = false
-      setBusy('')
     }
+    actingRef.current = false
+    setBusy('')
   }
 
   async function onBaixarAnexo(anexo) {
@@ -140,13 +147,11 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
     setBusy(`baixar-${anexo.id}`)
     try {
       await downloadAnexo(tarefa.id, anexo.id, anexo.nome)
-      actingRef.current = false
-      setBusy('')
     } catch {
-      actingRef.current = false
-      setBusy('')
-      showToast('Não foi possível baixar o arquivo.', 'erro')
+      showToast('Não foi possível baixar.', 'erro')
     }
+    actingRef.current = false
+    setBusy('')
   }
 
   async function onExcluirAnexo() {
@@ -167,6 +172,24 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
       const msg = err.response?.data?.message || 'Não foi possível excluir o anexo.'
       showToast(msg, 'erro')
     }
+  }
+
+  async function onComentar(event) {
+    event.preventDefault()
+    const texto = comentario.trim()
+    if (!texto || actingRef.current) return
+    actingRef.current = true
+    setBusy('comentario')
+    try {
+      const payload = await criarComentario(tarefa.id, texto)
+      onAtualizada(payload.data)
+      setComentario('')
+      showToast('Comentário publicado')
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Não foi possível comentar.', 'erro')
+    }
+    actingRef.current = false
+    setBusy('')
   }
 
   const itens = tarefa.checklist_itens || []
@@ -200,6 +223,9 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
               </span>
               {tarefa.atrasada ? (
                 <span className="rounded-full bg-[#fdecea] px-2 py-1 text-xs font-bold text-[#b42318]">Atrasado</span>
+              ) : null}
+              {tarefa.recorrente ? (
+                <span className="rounded-full bg-[var(--moss-soft)] px-2 py-1 text-xs font-bold text-[var(--moss)]">Recorrente</span>
               ) : null}
             </div>
 
@@ -313,6 +339,44 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
                 <p className="mt-2 mb-0">{tarefa.briefing}</p>
               </div>
             ) : null}
+
+            <div className="mt-4 rounded-[10px] border border-[var(--line)] p-3" data-testid="timeline-comentarios">
+              <p className="m-0 text-xs font-extrabold tracking-wide uppercase text-[var(--muted)]">
+                Comentários / timeline
+              </p>
+              <ul className="mt-2 m-0 max-h-48 list-none space-y-2 overflow-auto p-0">
+                {comentarios.length === 0 ? (
+                  <li className="text-sm text-[var(--muted)]">Nada por aqui ainda.</li>
+                ) : (
+                  comentarios.map((item) => (
+                    <li key={item.id} className="text-sm">
+                      <strong className="text-[var(--moss)]">{item.autor || '—'}</strong>
+                      <span className="text-[var(--muted)]"> · {item.corpo}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+              {podeComentar ? (
+                <form onSubmit={onComentar} className="mt-3 flex gap-2">
+                  <input
+                    value={comentario}
+                    onChange={(e) => setComentario(e.target.value)}
+                    data-testid="comentario-input"
+                    placeholder="Escrever comentário…"
+                    className="min-w-0 flex-1 rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
+                    disabled={Boolean(busy)}
+                  />
+                  <button
+                    type="submit"
+                    data-testid="comentario-enviar"
+                    disabled={Boolean(busy) || !comentario.trim()}
+                    className="rounded-lg bg-[var(--moss)] px-3 py-2 text-xs font-extrabold text-white disabled:opacity-50"
+                  >
+                    {busy === 'comentario' ? '…' : 'Enviar'}
+                  </button>
+                </form>
+              ) : null}
+            </div>
           </section>
 
           <section>
@@ -321,6 +385,26 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
               <p>Cliente: <strong>{tarefa.cliente?.nome_fantasia || '—'}</strong></p>
               <p>Serviço: {tarefa.servico?.nome || '—'}</p>
             </div>
+
+            {verFinanceiro ? (
+              <div
+                className="mt-4 rounded-[10px] border border-[var(--orange)] bg-[var(--orange-soft)] p-3"
+                data-testid="custo-acumulado"
+              >
+                <p className="m-0 text-[0.7rem] font-extrabold tracking-wide text-[var(--moss)]">CUSTO ACUMULADO</p>
+                <p className="mt-1 mb-0 text-2xl font-extrabold text-[var(--moss)]">
+                  {formatarBRL(tarefa.custo_acumulado ?? 0)}
+                </p>
+                <p className="mt-1 mb-0 text-sm text-[var(--muted)]">
+                  {Number(tarefa.horas_acumuladas ?? 0).toLocaleString('pt-BR')} h apontadas
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-[10px] border border-[var(--line)] p-3 text-sm text-[var(--muted)]">
+                Custo oculto para este perfil.
+              </div>
+            )}
+
             <p className="mt-4 mb-2 text-xs font-bold text-[var(--muted)]">Anexos</p>
             <div className="rounded-[10px] border border-[var(--line)] p-3" data-testid="lista-anexos">
               {(tarefa.anexos || []).length === 0 ? (

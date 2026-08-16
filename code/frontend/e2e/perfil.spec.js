@@ -4,7 +4,7 @@ import { abrirMenuConta, entrarComo, sairPeloMenu } from './helpers.js'
 test('colaborador altera a própria senha em Minha conta', async ({ page }) => {
   await entrarComo(page, 'ana@agenciaeduc.local', 'password')
   await abrirMenuConta(page)
-  await page.getByRole('link', { name: 'Minha conta' }).click()
+  await page.getByRole('menuitem', { name: 'Minha conta' }).click()
   await expect(page.getByText('Ana Silva')).toBeVisible()
 
   await page.getByTestId('perfil-senha-atual').fill('password')

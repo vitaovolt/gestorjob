@@ -6,7 +6,8 @@ Slogan: **Organize · Descomplique.**
 
 ## Onde estamos
 
-Etapa **E4 · F0** (bootstrap). E1–E3 já entregues (lo-fi, identidade e hi-fi).
+Etapa **E4 · F6** fechada (produção em [app.gestorjob.com.br](https://app.gestorjob.com.br)).  
+Próximo: lacunas MVP (recorrência, custo no drawer, comentários).
 
 | Artefato | Caminho |
 |----------|---------|

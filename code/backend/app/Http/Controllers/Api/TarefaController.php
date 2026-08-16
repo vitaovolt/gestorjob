@@ -7,6 +7,7 @@ use App\Actions\ExcluirTarefa;
 use App\Actions\IniciarTimer;
 use App\Actions\NotificarResponsaveisTarefa;
 use App\Actions\PausarTimer;
+use App\Actions\RegistrarComentarioTarefa;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AlternarChecklistRequest;
 use App\Http\Requests\IniciarTimerRequest;
@@ -15,6 +16,7 @@ use App\Http\Requests\UpdateTarefaRequest;
 use App\Models\Notificacao;
 use App\Models\Tarefa;
 use App\Models\TarefaChecklistItem;
+use App\Models\TarefaComentario;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,11 +26,22 @@ class TarefaController extends Controller
 {
     use ApiResponse;
 
+    private function flagsApi(Request $request): array
+    {
+        $user = $request->user();
+
+        return [
+            $user?->id,
+            (bool) $user?->podeVerFinanceiro(),
+            false,
+        ];
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Tarefa::class);
         $user = $request->user();
-        $userId = $user?->id;
+        [$userId, $fin] = $this->flagsApi($request);
         $tarefas = Tarefa::query()
             ->visiveisPara($user)
             ->with(['cliente', 'servico', 'responsaveis', 'checklistItens', 'apontamentosAbertos'])
@@ -36,7 +49,7 @@ class TarefaController extends Controller
             ->when($request->filled('cliente_id'), fn ($q) => $q->where('cliente_id', $request->integer('cliente_id')))
             ->orderBy('prazo_em')
             ->get()
-            ->each(fn (Tarefa $tarefa) => $tarefa->carregarParaApi($userId));
+            ->each(fn (Tarefa $tarefa) => $tarefa->carregarParaApi($userId, $fin));
 
         return $this->ok($tarefas);
     }
@@ -44,7 +57,8 @@ class TarefaController extends Controller
     public function store(StoreTarefaRequest $request, CriarTarefa $criarTarefa): JsonResponse
     {
         $tarefa = $criarTarefa->handle($request->validated(), $request->user()?->id);
-        $tarefa->carregarParaApi($request->user()?->id);
+        [$userId, $fin] = $this->flagsApi($request);
+        $tarefa->carregarParaApi($userId, $fin, true);
 
         return $this->ok($tarefa, 'Tarefa criada', 201);
     }
@@ -52,7 +66,8 @@ class TarefaController extends Controller
     public function show(Request $request, Tarefa $tarefa): JsonResponse
     {
         $this->authorize('view', $tarefa);
-        $tarefa->load(['anexos.user'])->carregarParaApi($request->user()?->id);
+        [$userId, $fin] = $this->flagsApi($request);
+        $tarefa->load(['anexos.user'])->carregarParaApi($userId, $fin, true);
 
         return $this->ok($tarefa);
     }
@@ -61,12 +76,14 @@ class TarefaController extends Controller
         UpdateTarefaRequest $request,
         Tarefa $tarefa,
         NotificarResponsaveisTarefa $notificar,
+        RegistrarComentarioTarefa $registrarComentario,
     ): JsonResponse {
         $statusAntes = $tarefa->status;
         $tarefa->update($request->validated());
 
         if ($request->filled('status') && $statusAntes !== $tarefa->status) {
             $label = NotificarResponsaveisTarefa::labelStatus($tarefa->status);
+            $labelAntes = NotificarResponsaveisTarefa::labelStatus($statusAntes);
             $notificar->handle(
                 $tarefa->fresh(['responsaveis']),
                 Notificacao::TIPO_STATUS_ALTERADO,
@@ -75,9 +92,15 @@ class TarefaController extends Controller
                 null,
                 $request->user()?->id,
             );
+            $registrarComentario->handle(
+                $tarefa,
+                $labelAntes.' → '.$label,
+                TarefaComentario::TIPO_SISTEMA,
+            );
         }
 
-        $tarefa->carregarParaApi($request->user()?->id);
+        [$userId, $fin] = $this->flagsApi($request);
+        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi($userId, $fin, true);
 
         return $this->ok($tarefa, 'Tarefa atualizada');
     }
@@ -102,7 +125,8 @@ class TarefaController extends Controller
     public function iniciarTimer(IniciarTimerRequest $request, Tarefa $tarefa, IniciarTimer $iniciarTimer): JsonResponse
     {
         $iniciarTimer->handle($tarefa, $request->user(), $request->validated('fase'));
-        $tarefa->refresh()->carregarParaApi($request->user()->id);
+        [$userId, $fin] = $this->flagsApi($request);
+        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi($userId, $fin, true);
 
         return $this->ok($tarefa, 'Timer iniciado');
     }
@@ -111,7 +135,8 @@ class TarefaController extends Controller
     {
         $this->authorize('timer', $tarefa);
         $pausarTimer->handle($tarefa, $request->user());
-        $tarefa->refresh()->carregarParaApi($request->user()->id);
+        [$userId, $fin] = $this->flagsApi($request);
+        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi($userId, $fin, true);
 
         return $this->ok($tarefa, 'Timer pausado');
     }
@@ -120,7 +145,8 @@ class TarefaController extends Controller
     {
         abort_unless((int) $item->tarefa_id === (int) $tarefa->id, 404);
         $item->update(['feito' => $request->boolean('feito')]);
-        $tarefa->refresh()->carregarParaApi($request->user()?->id);
+        [$userId, $fin] = $this->flagsApi($request);
+        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi($userId, $fin, true);
 
         return $this->ok($tarefa, 'Checklist atualizado');
     }

@@ -29,6 +29,8 @@ class Tarefa extends Model
         'empresa_id',
         'cliente_id',
         'servico_id',
+        'recorrencia_id',
+        'ocorrencia_em',
         'titulo',
         'status',
         'prioridade',
@@ -42,6 +44,7 @@ class Tarefa extends Model
     {
         return [
             'prazo_em' => 'datetime',
+            'ocorrencia_em' => 'date',
             'recorrente' => 'boolean',
         ];
     }
@@ -112,6 +115,43 @@ class Tarefa extends Model
         return $this->hasMany(TarefaAnexo::class)->orderByDesc('id');
     }
 
+    public function comentarios(): HasMany
+    {
+        return $this->hasMany(TarefaComentario::class)->orderBy('id');
+    }
+
+    public function recorrencia(): BelongsTo
+    {
+        return $this->belongsTo(Recorrencia::class);
+    }
+
+    /**
+     * @return array{custo:float,horas:float,segundos:int}
+     */
+    public function custoEHorasAcumulados(): array
+    {
+        $this->loadMissing('apontamentos');
+        $segundos = 0;
+        $custo = 0.0;
+
+        foreach ($this->apontamentos as $apontamento) {
+            if ($apontamento->encerrado_em) {
+                $seg = (int) $apontamento->segundos;
+            } else {
+                $inicio = $apontamento->iniciado_em;
+                $seg = $inicio ? max(0, (int) $inicio->diffInSeconds(now())) : 0;
+            }
+            $segundos += $seg;
+            $custo += round(($seg / 3600) * (float) $apontamento->custo_hora_snapshot, 2);
+        }
+
+        return [
+            'custo' => round($custo, 2),
+            'horas' => round($segundos / 3600, 2),
+            'segundos' => $segundos,
+        ];
+    }
+
     public function estaAtrasada(): bool
     {
         if (! $this->prazo_em) {
@@ -132,7 +172,7 @@ class Tarefa extends Model
         });
     }
 
-    public function carregarParaApi(?int $userId = null): static
+    public function carregarParaApi(?int $userId = null, bool $comFinanceiro = false, bool $comComentarios = false): static
     {
         $this->loadMissing(['cliente', 'servico', 'responsaveis', 'checklistItens', 'apontamentosAbertos']);
         $this->setAttribute('atrasada', $this->estaAtrasada());
@@ -162,6 +202,22 @@ class Tarefa extends Model
             $lista = $this->anexos->map->paraApi()->values()->all();
             $this->unsetRelation('anexos');
             $this->setAttribute('anexos', $lista);
+        }
+
+        if ($comComentarios) {
+            $this->loadMissing(['comentarios.user']);
+            $lista = $this->comentarios->map->paraApi()->values()->all();
+            $this->unsetRelation('comentarios');
+            $this->setAttribute('comentarios', $lista);
+        }
+
+        if ($comFinanceiro) {
+            $totais = $this->custoEHorasAcumulados();
+            $this->setAttribute('custo_acumulado', $totais['custo']);
+            $this->setAttribute('horas_acumuladas', $totais['horas']);
+        } else {
+            $this->offsetUnset('custo_acumulado');
+            $this->offsetUnset('horas_acumuladas');
         }
 
         return $this;

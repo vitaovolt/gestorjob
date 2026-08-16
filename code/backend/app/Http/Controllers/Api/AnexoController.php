@@ -22,7 +22,12 @@ class AnexoController extends Controller
     {
         $this->garantirVisivel($request, $tarefa);
         $anexar->handle($tarefa, $request->user(), $request->file('arquivo'));
-        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi($request->user()?->id);
+        $user = $request->user();
+        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi(
+            $user?->id,
+            (bool) $user?->podeVerFinanceiro(),
+            true,
+        );
 
         return $this->ok($tarefa, 'Arquivo anexado', 201);
     }
@@ -46,7 +51,12 @@ class AnexoController extends Controller
         abort_unless((int) $anexo->tarefa_id === (int) $tarefa->id, 404);
 
         $excluir->handle($anexo);
-        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi($request->user()?->id);
+        $user = $request->user();
+        $tarefa->refresh()->load(['anexos.user'])->carregarParaApi(
+            $user?->id,
+            (bool) $user?->podeVerFinanceiro(),
+            true,
+        );
 
         return $this->ok($tarefa, 'Anexo removido');
     }

@@ -38,7 +38,7 @@ export async function abrirMenuConta(page) {
 
 export async function sairPeloMenu(page) {
   await abrirMenuConta(page)
-  await page.getByRole('button', { name: 'Sair' }).click()
+  await page.getByRole('menuitem', { name: 'Sair' }).click()
 }
 
 export function editarNaLista(page, listaTestId, textoLinha) {

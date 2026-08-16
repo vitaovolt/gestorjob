@@ -6,7 +6,7 @@
 | etapa_atual | `e4` |
 | fase_e4 | `F6` |
 | status | `aguardando_aprovacao` |
-| proximo_passo | Smoke F6 com orchestrator. Cole o CARTÃO. |
+| proximo_passo | Smoke lacunas MVP (recorrência no serviço, custo e comentários no drawer). |
 | skill | `educraft-dev-orchestrator` |
 | remoto | `git@github.com:vitaovolt/gestorjob.git` |
 
@@ -46,7 +46,7 @@ Ver [CAPABILITIES.md](CAPABILITIES.md).
 - [x] E4 F4 ciclo 9 E-mail de prazo (E2E verde · smoke OK 2026-08-15)
 - [x] E4 F4 Módulos (MVP telas + notif in-app/e-mail)
 - [x] E4 F5 Hardening (E2E verde · smoke OK 2026-08-15)
-- [ ] E4 F6 Deploy
+- [x] E4 F6 Deploy (smoke OK 2026-08-16 · SES produção solicitado)
 
 ## Links úteis
 
@@ -73,4 +73,5 @@ Ver [CAPABILITIES.md](CAPABILITIES.md).
 | 2026-08-15 | F4 ciclo 9: e-mail de prazo · PHPUnit 89 · Playwright 15 · build OK |
 | 2026-08-15 | Gate F4 ciclo 9 + F4 Módulos fechados (smoke OK) → F5 Hardening |
 | 2026-08-15 | F5 Hardening · PHPUnit 97 · Playwright 17 · smoke OK → F6 Deploy |
-| 2026-08-16 | F6 Deploy implementada · PHPUnit 101 · deploy-health · aguardando smoke |
+| 2026-08-16 | F6 Deploy · produção app.gestorjob.com.br · SES produção solicitado · gate fechado |
+| 2026-08-16 | Lacunas MVP: recorrência + custo drawer + comentários (PHPUnit 106 · e2e mvp-lacunas) |

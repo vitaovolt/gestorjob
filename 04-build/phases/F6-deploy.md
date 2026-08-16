@@ -1,4 +1,6 @@
-# F6 Deploy + handoff — `gestor-job`
+# F6 Deploy + handoff — `gestor-job` (fechada)
+
+**Gate fechado 2026-08-16** — smoke OK · produção `app.gestorjob.com.br` · pedido SES produção feito.
 
 **Objetivo:** Deploy API + FE (CI + self-hosted), docs, ficha catalog, smoke health pós-deploy, lições finais.
 

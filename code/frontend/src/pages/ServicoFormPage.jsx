@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { createServico, deleteServico, getServico, updateServico } from '../api/dominio'
+import {
+  ativarRecorrencia,
+  createServico,
+  deleteServico,
+  desativarRecorrencia,
+  gerarRecorrencia,
+  getServico,
+  listClientes,
+  listColaboradores,
+  listRecorrencias,
+  updateServico,
+} from '../api/dominio'
 import AppShell from '../components/layout/AppShell.jsx'
 import { useToast } from '../context/ToastContext'
 import { maskMoneyBR, moneyFromNumber, parseMoneyBR } from '../utils/masks'
@@ -49,6 +60,12 @@ export default function ServicoFormPage() {
   const [excluindo, setExcluindo] = useState(false)
   const [confirmarExcluir, setConfirmarExcluir] = useState(false)
   const [erro, setErro] = useState('')
+  const [clientes, setClientes] = useState([])
+  const [colaboradores, setColaboradores] = useState([])
+  const [series, setSeries] = useState([])
+  const [ativar, setAtivar] = useState({ cliente_id: '', titulo: '', responsavel_id: '', horizonte_semanas: '4' })
+  const [gerando, setGerando] = useState(false)
+  const gerarRef = useRef(false)
 
   useEffect(() => {
     if (novo) return undefined
@@ -72,6 +89,18 @@ export default function ServicoFormPage() {
         showToast('Serviço não encontrado.', 'erro')
         navigate('/servicos', { replace: true })
       })
+
+    Promise.all([listClientes(), listColaboradores(), listRecorrencias({ servico_id: id })])
+      .then(([c, col, rec]) => {
+        setClientes(c.data || [])
+        setColaboradores(col.data || [])
+        setSeries((rec.data || []).filter((s) => s.ativa))
+        if ((c.data || [])[0]) {
+          setAtivar((a) => ({ ...a, cliente_id: String(c.data[0].id) }))
+        }
+      })
+      .catch(() => {})
+
     return undefined
   }, [id, novo, navigate, showToast])
 
@@ -160,6 +189,70 @@ export default function ServicoFormPage() {
       const msg = err.response?.data?.message || 'Não foi possível excluir o serviço.'
       showToast(msg, 'erro')
     }
+  }
+
+  async function onAtivarSerie(event) {
+    event?.preventDefault?.()
+    if (gerarRef.current || novo) return
+    if (!ativar.cliente_id || !ativar.titulo.trim()) {
+      showToast('Informe cliente e título da série.', 'erro')
+      return
+    }
+    if (!form.frequencia) {
+      showToast('Salve o template de recorrência no serviço antes.', 'erro')
+      return
+    }
+    gerarRef.current = true
+    setGerando(true)
+    try {
+      const payload = await ativarRecorrencia({
+        cliente_id: Number(ativar.cliente_id),
+        servico_id: Number(id),
+        titulo: ativar.titulo.trim(),
+        responsavel_id: ativar.responsavel_id ? Number(ativar.responsavel_id) : undefined,
+        horizonte_semanas: Number(ativar.horizonte_semanas) || 4,
+      })
+      const serie = payload.data?.recorrencia
+      const criadas = payload.data?.geracao?.criadas ?? 0
+      if (serie) {
+        setSeries((lista) => [serie, ...lista.filter((s) => s.id !== serie.id)])
+      }
+      showToast(`Recorrência ativa · ${criadas} card(s) no Kanban`)
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Não foi possível ativar a recorrência.', 'erro')
+    }
+    gerarRef.current = false
+    setGerando(false)
+  }
+
+  async function onGerarSerie(serieId) {
+    if (gerarRef.current) return
+    gerarRef.current = true
+    setGerando(true)
+    try {
+      const payload = await gerarRecorrencia(serieId)
+      const criadas = payload.data?.geracao?.criadas ?? 0
+      showToast(criadas ? `${criadas} card(s) gerados` : 'Horizonte já estava completo')
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Falha ao gerar cards.', 'erro')
+    }
+    gerarRef.current = false
+    setGerando(false)
+  }
+
+  async function onDesativarSerie(serieId) {
+    if (gerarRef.current) return
+    gerarRef.current = true
+    setGerando(true)
+    try {
+      await desativarRecorrencia(serieId)
+      setSeries((lista) => lista.filter((s) => s.id !== serieId))
+      showToast('Recorrência desativada')
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Não foi possível desativar.', 'erro')
+    }
+    gerarRef.current = false
+    setGerando(false)
   }
 
   const campo =
@@ -307,6 +400,104 @@ export default function ServicoFormPage() {
           ) : null}
         </div>
       </form>
+
+      {!novo && form.frequencia ? (
+        <section className="mt-6 max-w-3xl rounded-[12px] border border-[var(--line)] bg-white p-5" data-testid="painel-recorrencia">
+          <h2 className="m-0 text-base font-extrabold text-[var(--moss)]">Ativar recorrência no Kanban</h2>
+          <p className="mt-1 mb-4 text-sm text-[var(--muted)]">
+            Liga o template a um cliente e gera cards no horizonte (job diário às 06:30 também completa).
+          </p>
+          <form onSubmit={onAtivarSerie} className="grid gap-3 md:grid-cols-2">
+            <label className="block text-sm font-bold text-[var(--moss)]">
+              Cliente
+              <select
+                value={ativar.cliente_id}
+                onChange={(e) => setAtivar((a) => ({ ...a, cliente_id: e.target.value }))}
+                className={campo}
+                data-testid="recorrencia-cliente"
+              >
+                {clientes.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nome_fantasia}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-bold text-[var(--moss)]">
+              Título dos cards
+              <input
+                value={ativar.titulo}
+                onChange={(e) => setAtivar((a) => ({ ...a, titulo: e.target.value }))}
+                className={campo}
+                placeholder="IG 3x — Cliente"
+                data-testid="recorrencia-titulo"
+              />
+            </label>
+            <label className="block text-sm font-bold text-[var(--moss)]">
+              Responsável
+              <select
+                value={ativar.responsavel_id}
+                onChange={(e) => setAtivar((a) => ({ ...a, responsavel_id: e.target.value }))}
+                className={campo}
+              >
+                <option value="">Sem responsável</option>
+                {colaboradores.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-bold text-[var(--moss)]">
+              Horizonte (semanas)
+              <select
+                value={ativar.horizonte_semanas}
+                onChange={(e) => setAtivar((a) => ({ ...a, horizonte_semanas: e.target.value }))}
+                className={campo}
+              >
+                <option value="2">2 semanas</option>
+                <option value="4">4 semanas</option>
+                <option value="8">8 semanas</option>
+              </select>
+            </label>
+            <div className="md:col-span-2">
+              <button
+                type="button"
+                disabled={gerando}
+                data-testid="recorrencia-ativar"
+                onClick={() => onAtivarSerie({ preventDefault() {} })}
+                className="rounded-lg bg-[var(--orange)] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-70"
+              >
+                {gerando ? 'Processando…' : 'Gerar cards no Kanban'}
+              </button>
+            </div>
+          </form>
+
+          {series.length > 0 ? (
+            <ul className="mt-5 m-0 list-none space-y-2 p-0" data-testid="lista-recorrencias">
+              {series.map((serie) => (
+                <li key={serie.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
+                  <strong className="text-[var(--moss)]">{serie.titulo}</strong>
+                  <span className="text-[var(--muted)]">· {serie.cliente?.nome_fantasia || 'Cliente'}</span>
+                  <span className="flex-1" />
+                  <button
+                    type="button"
+                    disabled={gerando}
+                    onClick={() => onGerarSerie(serie.id)}
+                    className="rounded-lg border border-[var(--line)] px-2 py-1 text-xs font-bold text-[var(--moss)]"
+                  >
+                    Completar horizonte
+                  </button>
+                  <button
+                    type="button"
+                    disabled={gerando}
+                    onClick={() => onDesativarSerie(serie.id)}
+                    className="rounded-lg border border-[#f3c4c0] px-2 py-1 text-xs font-bold text-[#b42318]"
+                  >
+                    Desativar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
 
       {confirmarExcluir ? (
         <div className="fixed inset-0 z-[60] grid place-items-center bg-black/30 p-4">

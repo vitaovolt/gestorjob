@@ -58,4 +58,9 @@ class TarefaPolicy
     {
         return $this->update($user, $tarefa);
     }
+
+    public function comentar(User $user, Tarefa $tarefa): Response
+    {
+        return $this->update($user, $tarefa);
+    }
 }
