@@ -121,6 +121,10 @@ curl -sS https://app.gestorjob.com.br/api/v1/health
 
 Checklist: login SPA (`mariana@agenciaeduc.local` / `password` no seed) · criar tarefa · health 200 · headers `X-Frame-Options`.
 
+### E-mail (Amazon SES)
+
+Ver [SES-CLOUDFLARE.md](SES-CLOUDFLARE.md) — DNS no Cloudflare + `MAIL_MAILER=ses`.
+
 ### Security Group
 
 Porta **22** só no IP `/32` do admin. 80/443 abertos (ou só Cloudflare → origem).
