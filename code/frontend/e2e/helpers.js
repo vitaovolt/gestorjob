@@ -31,6 +31,16 @@ export function navPrincipal(page) {
   return page.getByRole('navigation', { name: 'Principal' })
 }
 
+export async function abrirMenuConta(page) {
+  await page.getByTestId('btn-conta-menu').click()
+  await expect(page.getByTestId('conta-menu-panel')).toBeVisible()
+}
+
+export async function sairPeloMenu(page) {
+  await abrirMenuConta(page)
+  await page.getByRole('button', { name: 'Sair' }).click()
+}
+
 export function editarNaLista(page, listaTestId, textoLinha) {
   return page.getByTestId(listaTestId).locator('tr', { hasText: textoLinha }).getByRole('link', { name: 'Editar' })
 }

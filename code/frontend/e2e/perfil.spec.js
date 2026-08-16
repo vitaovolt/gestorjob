@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test'
-import { entrarComo } from './helpers.js'
+import { abrirMenuConta, entrarComo, sairPeloMenu } from './helpers.js'
 
 test('colaborador altera a própria senha em Minha conta', async ({ page }) => {
   await entrarComo(page, 'ana@agenciaeduc.local', 'password')
+  await abrirMenuConta(page)
   await page.getByRole('link', { name: 'Minha conta' }).click()
   await expect(page.getByText('Ana Silva')).toBeVisible()
 
@@ -12,7 +13,7 @@ test('colaborador altera a própria senha em Minha conta', async ({ page }) => {
   await page.getByRole('button', { name: 'Salvar senha' }).click()
   await expect(page.getByTestId('toast')).toContainText('Senha atualizada')
 
-  await page.getByRole('button', { name: 'Sair' }).click()
+  await sairPeloMenu(page)
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible()
 
   await entrarComo(page, 'ana@agenciaeduc.local', 'nova-senha-1')

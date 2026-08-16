@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { entrarComoPlataforma, navPrincipal } from './helpers.js'
+import { entrarComoPlataforma, navPrincipal, sairPeloMenu } from './helpers.js'
 
 test('wizard onboarding após convite: salva serviço e conclui', async ({ page }) => {
   await entrarComoPlataforma(page)
@@ -14,7 +14,7 @@ test('wizard onboarding após convite: salva serviço e conclui', async ({ page 
   const conviteHref = await page.getByTestId('convite-url').getAttribute('href')
   const token = new URL(conviteHref, 'http://127.0.0.1:5173').searchParams.get('token')
 
-  await page.getByRole('button', { name: 'Sair' }).click()
+  await sairPeloMenu(page)
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible()
   await page.goto(`/convite?token=${token}`)
   await expect(page.getByTestId('convite-nome')).toBeVisible()

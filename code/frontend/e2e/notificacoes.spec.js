@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { entrarComo, entrarComoMariana, navPrincipal } from './helpers.js'
+import { entrarComo, entrarComoMariana, navPrincipal, sairPeloMenu } from './helpers.js'
 
 test('mover status via API gera notificação in-app para o colaborador', async ({ page, request }) => {
   await entrarComoMariana(page)
@@ -38,7 +38,7 @@ test('mover status via API gera notificação in-app para o colaborador', async 
     expect(put2.ok()).toBeTruthy()
   }
 
-  await page.getByRole('button', { name: 'Sair' }).click()
+  await sairPeloMenu(page)
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible()
   await entrarComo(page, 'ana@agenciaeduc.local', 'password')
   await expect(page.getByTestId('btn-notif')).toBeVisible()

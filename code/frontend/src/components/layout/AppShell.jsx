@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ehSuperAdmin } from '../../utils/format'
@@ -20,15 +20,29 @@ export default function AppShell({ title, cta, children }) {
   const { user, logout } = useAuth()
   const location = useLocation()
   const submittingRef = useRef(false)
+  const menuRef = useRef(null)
   const [saindo, setSaindo] = useState(false)
+  const [menuAberto, setMenuAberto] = useState(false)
   const superAdmin = ehSuperAdmin(user)
   const visaoTarefas = !superAdmin && (location.pathname === '/' || location.pathname === '/lista')
   const verConfig = Boolean(user?.permissoes?.ver_config)
+
+  useEffect(() => {
+    if (!menuAberto) return undefined
+    function fechar(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuAberto(false)
+      }
+    }
+    document.addEventListener('mousedown', fechar)
+    return () => document.removeEventListener('mousedown', fechar)
+  }, [menuAberto])
 
   async function onLogout() {
     if (submittingRef.current) return
     submittingRef.current = true
     setSaindo(true)
+    setMenuAberto(false)
     try {
       await logout()
     } catch {
@@ -123,20 +137,44 @@ export default function AppShell({ title, cta, children }) {
             </button>
           ) : null}
           {!superAdmin ? <NotificacoesBell /> : null}
-          <Link to="/perfil" className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-bold text-[var(--moss)] hover:bg-[var(--moss-soft)]">
-            Minha conta
-          </Link>
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--moss-soft)] text-xs font-extrabold text-[var(--moss)]">
-            {iniciais}
-          </span>
-          <button
-            type="button"
-            onClick={onLogout}
-            disabled={saindo}
-            className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-bold text-[var(--moss)] hover:bg-[var(--moss-soft)] disabled:opacity-70"
-          >
-            {saindo ? 'Saindo…' : 'Sair'}
-          </button>
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              data-testid="btn-conta-menu"
+              aria-expanded={menuAberto}
+              aria-haspopup="menu"
+              aria-label="Menu da conta"
+              onClick={() => setMenuAberto((v) => !v)}
+              className="grid h-9 w-9 place-items-center rounded-full bg-[var(--moss-soft)] text-xs font-extrabold text-[var(--moss)] hover:brightness-95"
+            >
+              {iniciais}
+            </button>
+            {menuAberto ? (
+              <div
+                data-testid="conta-menu-panel"
+                role="menu"
+                className="absolute right-0 z-40 mt-2 min-w-[160px] overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface)] shadow-[0_12px_32px_rgba(26,34,32,0.14)]"
+              >
+                <Link
+                  to="/perfil"
+                  role="menuitem"
+                  onClick={() => setMenuAberto(false)}
+                  className="block px-3 py-2.5 text-sm font-bold text-[var(--moss)] hover:bg-[var(--moss-soft)]/40"
+                >
+                  Minha conta
+                </Link>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={onLogout}
+                  disabled={saindo}
+                  className="block w-full border-t border-[var(--line)] px-3 py-2.5 text-left text-sm font-bold text-[var(--moss)] hover:bg-[var(--moss-soft)]/40 disabled:opacity-70"
+                >
+                  {saindo ? 'Saindo…' : 'Sair'}
+                </button>
+              </div>
+            ) : null}
+          </div>
         </header>
         <div className="min-h-0 flex-1 overflow-auto p-5">{children}</div>
       </div>

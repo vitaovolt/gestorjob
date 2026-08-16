@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { entrarComoPlataforma, navPrincipal, editarNaLista } from './helpers.js'
+import { entrarComoPlataforma, navPrincipal, editarNaLista, sairPeloMenu } from './helpers.js'
 
 test('Super Admin cria empresa e admin ativa o convite', async ({ page }) => {
   await entrarComoPlataforma(page)
@@ -27,7 +27,7 @@ test('Super Admin cria empresa e admin ativa o convite', async ({ page }) => {
   await expect(page.getByTestId('lista-empresas').getByText('Agência Pixel')).toBeVisible()
   await expect(editarNaLista(page, 'lista-empresas', 'Agência Pixel')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Sair' }).click()
+  await sairPeloMenu(page)
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible()
 
   await page.goto(`/convite?token=${token}`)
