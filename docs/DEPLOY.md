@@ -31,8 +31,28 @@ Disparo manual: Actions → **Deploy to Production** → Run workflow.
 
 \*Preferido: chave na EC2. Sem chave, o workflow usa HTTPS (repo público).
 
+Cadastrar no GitHub → Settings → Secrets → Actions:
+
+- `DEPLOY_PATH` = `/var/www/gestorjob`
+
+Deploy key pública (já gerada na EC2) → Settings → Deploy keys:
+
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKQQTCP9lqkOcOwV/XQ3gp9zA7fU6+p74wsBk1ZSAcgj gestorjob-ec2-deploy
+```
+
 **Não** criar: `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`.
 
+## Produção atual (2026-08-16)
+
+| Item | Status |
+|------|--------|
+| App | https://app.gestorjob.com.br |
+| Health | `/api/v1/health` com `checks.database=ok` |
+| TLS | Let’s Encrypt (certbot) |
+| Queue | `gestorjob-queue.service` |
+| Node | **20.x** no servidor (Vite 8 exige ≥20) |
+| Path | `/var/www/gestorjob` |
 ## No servidor (uma vez)
 
 ### 1) Clone
@@ -90,4 +110,8 @@ curl -sS https://app.gestorjob.com.br/api/v1/health
 # esperado: "status":"ok", "checks":{"database":"ok"}
 ```
 
-Checklist: login SPA · criar tarefa · health 200 · headers `X-Frame-Options`.
+Checklist: login SPA (`mariana@agenciaeduc.local` / `password` no seed) · criar tarefa · health 200 · headers `X-Frame-Options`.
+
+### Security Group
+
+Porta **22** só no IP `/32` do admin. 80/443 abertos (ou só Cloudflare → origem).
