@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  ANEXO_ACCEPT,
   atualizarChecklist,
   criarComentario,
   deleteAnexo,
@@ -16,6 +15,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { formatarBRL, formatarBytes, temPermissao } from '../../utils/format'
+import CampoArquivo from '../ui/CampoArquivo.jsx'
 import ConfirmarExcluir from '../ui/ConfirmarExcluir.jsx'
 import { COLUNAS, FASES_TIMER, formatarTimer, PRIORIDADE_LABEL, segundosAbertos } from '../../pages/kanbanLabels'
 
@@ -27,7 +27,6 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
   const [confirmarExcluir, setConfirmarExcluir] = useState(false)
   const [alvoAnexo, setAlvoAnexo] = useState(null)
   const [comentario, setComentario] = useState('')
-  const fileRef = useRef(null)
   const podeExcluir = temPermissao(user, 'excluir_tarefas')
   const podeAnexar = temPermissao(user, 'anexar')
   const podeComentar = temPermissao(user, 'comentar')
@@ -131,9 +130,8 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
     setBusy('')
   }
 
-  async function onEnviarAnexo(event) {
-    const arquivo = event.target.files?.[0]
-    event.target.value = ''
+  async function onEnviarAnexo(lista) {
+    const arquivo = lista[0]
     if (!arquivo) return
     const erroLocal = validarAnexoCliente(arquivo)
     if (erroLocal) {
@@ -459,27 +457,14 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
               )}
               {podeAnexar ? (
                 <div className="mt-3">
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    data-testid="anexo-arquivo"
-                    className="absolute h-px w-px overflow-hidden opacity-0"
-                    accept={ANEXO_ACCEPT}
+                  <CampoArquivo
+                    multiple={false}
                     disabled={Boolean(busy)}
-                    onChange={onEnviarAnexo}
+                    testId="anexo-arquivo"
+                    botaoTestId="enviar-anexo"
+                    botao={busy === 'anexo' ? 'Processando…' : 'Enviar arquivo'}
+                    onEscolher={onEnviarAnexo}
                   />
-                  <button
-                    type="button"
-                    data-testid="enviar-anexo"
-                    disabled={Boolean(busy)}
-                    onClick={() => fileRef.current?.click()}
-                    className="rounded-lg bg-[var(--orange)] px-3 py-2 text-xs font-extrabold text-white hover:brightness-110 disabled:opacity-70"
-                  >
-                    {busy === 'anexo' ? 'Processando…' : 'Enviar arquivo'}
-                  </button>
-                  <p className="mt-2 mb-0 text-[11px] text-[var(--muted)]">
-                    Só PDF, JPG, PNG, WEBP, GIF, Word ou Excel · até 10 MB
-                  </p>
                 </div>
               ) : null}
             </div>

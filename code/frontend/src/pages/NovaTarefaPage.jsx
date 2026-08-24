@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  ANEXO_ACCEPT,
   createTarefa,
   listClientes,
   listColaboradores,
@@ -11,6 +10,7 @@ import {
   validarAnexoCliente,
 } from '../api/dominio'
 import AppShell from '../components/layout/AppShell.jsx'
+import CampoArquivo from '../components/ui/CampoArquivo.jsx'
 import CampoData from '../components/ui/CampoData.jsx'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -101,9 +101,7 @@ export default function NovaTarefaPage() {
     }))
   }
 
-  function onArquivos(event) {
-    const lista = Array.from(event.target.files || [])
-    event.target.value = ''
+  function onArquivos(lista) {
     const ok = []
     for (const arquivo of lista) {
       const msg = validarAnexoCliente(arquivo)
@@ -276,13 +274,16 @@ export default function NovaTarefaPage() {
             />
           </label>
 
-          <label className="block text-sm font-bold text-[var(--moss)] md:col-span-2">
-            Anexos
-            <input type="file" accept={ANEXO_ACCEPT} multiple className="mt-1 block" onChange={onArquivos} data-testid="tarefa-anexos" />
-            {arquivos.length ? (
-              <span className="mt-1 block text-xs text-[var(--muted)]">{arquivos.length} arquivo(s) prontos para enviar</span>
-            ) : null}
-          </label>
+          <div className="md:col-span-2">
+            <p className="m-0 text-sm font-bold text-[var(--moss)]">Anexos</p>
+            <CampoArquivo
+              files={arquivos}
+              onEscolher={onArquivos}
+              onRemover={(indice) => setArquivos((atual) => atual.filter((_, i) => i !== indice))}
+              disabled={submitting}
+              testId="tarefa-anexos"
+            />
+          </div>
 
           <label className="block text-sm font-bold text-[var(--moss)]">
             Início

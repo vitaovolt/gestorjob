@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestor Job — Guia de Onboarding e Testes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --moss: #204038;
+      --orange: #F06820;
+      --moss-soft: #E6EFEC;
+      --orange-soft: #FFF0E8;
+      --ink: #1A2220;
+      --bg: #F3F6F4;
+      --line: #D5E0DB;
+      --muted: #5C6B66;
+      --danger: #B42318;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      background: white;
+      font-family: Nunito, "Segoe UI", sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+    @page {
+      size: A4;
+      margin: 16mm 14mm 18mm 14mm;
+    }
+    .page-break { page-break-before: always; break-before: page; }
+    .cover {
+      min-height: 250mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18mm 8mm 12mm;
+      background:
+        radial-gradient(ellipse at 90% 10%, var(--orange-soft), transparent 45%),
+        radial-gradient(ellipse at 0% 80%, var(--moss-soft), transparent 50%),
+        white;
+    }
+    .brand-mark {
+      width: 72px; height: 72px; border-radius: 50%;
+      border: 6px solid var(--moss);
+      border-top-color: var(--orange);
+      display: grid; place-items: center;
+      font-weight: 800; color: var(--moss); font-size: 14px;
+    }
+    .cover h1 {
+      margin: 28px 0 8px;
+      font-size: 34pt;
+      line-height: 1.1;
+      color: var(--moss);
+      font-weight: 800;
+    }
+    .cover .slogan {
+      font-size: 14pt; font-weight: 800; letter-spacing: .02em;
+    }
+    .cover .slogan .a { color: var(--moss); }
+    .cover .slogan .b { color: var(--orange); }
+    .cover .lead {
+      margin-top: 18px;
+      max-width: 420px;
+      color: var(--muted);
+      font-size: 12pt;
+    }
+    .meta-box {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: white;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 20px;
+      font-size: 10pt;
+    }
+    .meta-box strong { color: var(--moss); display: block; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; }
+    h2 {
+      color: var(--moss);
+      font-size: 16pt;
+      margin: 0 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--orange);
+      font-weight: 800;
+    }
+    h3 {
+      color: var(--moss);
+      font-size: 12pt;
+      margin: 18px 0 6px;
+      font-weight: 800;
+    }
+    h4 {
+      margin: 12px 0 4px;
+      color: var(--ink);
+      font-size: 10.5pt;
+      font-weight: 800;
+    }
+    p { margin: 0 0 8px; }
+    ul, ol { margin: 0 0 10px; padding-left: 1.2em; }
+    li { margin-bottom: 4px; }
+    .section { margin-bottom: 6mm; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 9.5pt;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--moss);
+      color: white;
+      font-weight: 700;
+    }
+    tr:nth-child(even) td { background: #f8faf9; }
+    .callout {
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin: 10px 0;
+      border: 1px solid var(--line);
+      background: var(--moss-soft);
+      font-size: 10pt;
+    }
+    .callout.warn {
+      background: var(--orange-soft);
+      border-color: #f5c9a8;
+    }
+    .callout.danger {
+      background: #fdecea;
+      border-color: #f3c4c0;
+    }
+    .callout strong { color: var(--moss); }
+    .steps {
+      counter-reset: passo;
+      list-style: none;
+      padding: 0;
+    }
+    .steps > li {
+      position: relative;
+      padding: 10px 10px 10px 42px;
+      margin-bottom: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+    }
+    .steps > li::before {
+      counter-increment: passo;
+      content: counter(passo);
+      position: absolute;
+      left: 10px; top: 10px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: white;
+      font-weight: 800;
+      font-size: 11pt;
+      display: grid; place-items: center;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 8.5pt;
+      font-weight: 800;
+      background: var(--moss-soft);
+      color: var(--moss);
+    }
+    .tag.orange { background: var(--orange-soft); color: var(--orange); }
+    .checklist li { list-style: none; padding-left: 0; }
+    .checklist li::before { content: "☐ "; color: var(--moss); font-weight: 700; }
+    .footer-note {
+      margin-top: 16px;
+      font-size: 9pt;
+      color: var(--muted);
+    }
+    code, .mono {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 9pt;
+      background: var(--bg);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .card-mini {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+    .card-mini h4 { margin-top: 0; color: var(--moss); }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA -->
+  <section class="cover">
+    <div>
+      <div class="brand-mark">GJ</div>
+      <h1>Guia de Onboarding<br/>e Testes</h1>
+      <p class="slogan"><span class="a">Organize</span> · <span class="b">Descomplique</span></p>
+      <p class="lead">
+        Documento para o cliente operar e validar o <strong>Gestor Job</strong> na estrutura atual do MVP:
+        Kanban, timer por fases, cadastros, recorrência, custo no drawer, notificações e comentários.
+      </p>
+    </div>
+    <div class="meta-box">
+      <div><strong>Produto</strong>Gestor Job</div>
+      <div><strong>Versão do guia</strong>1.0 · 16/08/2026</div>
+      <div><strong>Ambiente</strong>https://app.gestorjob.com.br</div>
+      <div><strong>Escopo</strong>MVP em produção (Fase 1)</div>
+      <div><strong>Destinatário</strong>Cliente / operador da agência</div>
+      <div><strong>Elaborado por</strong>Educraft</div>
+    </div>
+  </section>
+
+  <!-- 1. O QUE É -->
+  <section class="page-break section">
+    <h2>1. O que é o Gestor Job</h2>
+    <p>
+      Plataforma web para <strong>agências de marketing</strong> enxergarem o custo real do trabalho:
+      cada tarefa registra horas por fase; o custo usa o <em>custo/hora</em> do colaborador;
+      o fee do cliente permite comparar margem depois (dashboard completo entra na Fase 2).
+    </p>
+    <p><strong>Fórmula-alvo do produto:</strong></p>
+    <div class="callout">
+      <strong>Fee mensal do cliente − Σ (horas × custo/hora) = margem real do mês</strong><br/>
+      No MVP você já cadastra fee e custo/hora, aponta horas no timer e vê o <em>custo acumulado</em> na tarefa.
+      O painel consolidado de margem por cliente é a próxima entrega (Fase 2).
+    </div>
+
+    <h3>1.1 O que já está disponível (MVP)</h3>
+    <ul>
+      <li>Multi-tenant: cada agência isolada</li>
+      <li>Perfis: Super Admin · Admin · Gerente · Colaborador · Visualizador</li>
+      <li>Cadastros: Clientes (com fee), Serviços (checklist + recorrência), Colaboradores (custo/hora)</li>
+      <li>Kanban (home) + Lista de tarefas</li>
+      <li>Drawer da tarefa: timer, checklist, anexos, comentários/timeline, custo acumulado</li>
+      <li>Recorrência: gera cards futuros a partir do template do serviço</li>
+      <li>Notificações in-app + e-mail de prazo (quando SES estiver liberado em produção)</li>
+      <li>Wizard de onboarding para Admin novo</li>
+      <li>Configurações e matriz de permissões</li>
+      <li>Recuperar / redefinir senha · perfil (troca de senha própria)</li>
+    </ul>
+
+    <h3>1.2 Ainda não entra neste MVP</h3>
+    <ul>
+      <li>Calendário de tarefas e feriados institucionais (Fase 2)</li>
+      <li>Dashboard / relatórios de margem, atrasos, horas e carga (Fase 2)</li>
+      <li>Portal do cliente, white-label, app mobile, sync Drive/Figma/Meta (Fase 3)</li>
+    </ul>
+  </section>
+
+  <!-- 2. ACESSO -->
+  <section class="page-break section">
+    <h2>2. Como acessar</h2>
+    <table>
+      <tr><th>Item</th><th>Valor</th></tr>
+      <tr><td>URL de produção</td><td><span class="mono">https://app.gestorjob.com.br</span></td></tr>
+      <tr><td>Navegador recomendado</td><td>Chrome, Edge ou Firefox atualizados</td></tr>
+      <tr><td>Dispositivo</td><td>Desktop / notebook (uso principal). Mobile apenas leitura responsiva.</td></tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>Contas e senhas:</strong> use as credenciais enviadas pela Educraft no e-mail de entrega
+      (ou as contas de demonstração abaixo, se o ambiente demo estiver provisionado).
+      Troque a senha em <em>Menu da conta → Minha conta</em> no primeiro acesso.
+    </div>
+
+    <h3>2.1 Contas de demonstração (ambiente seed / homologação)</h3>
+    <p>Senha padrão de demo: <span class="mono">password</span> — altere após o primeiro login.</p>
+    <table>
+      <tr><th>Perfil</th><th>E-mail</th><th>Agência</th><th>Para testar</th></tr>
+      <tr>
+        <td>Admin</td>
+        <td><span class="mono">mariana@agenciaeduc.local</span></td>
+        <td>Agência Educ</td>
+        <td>Fluxo completo da operação</td>
+      </tr>
+      <tr>
+        <td>Colaborador</td>
+        <td><span class="mono">ana@agenciaeduc.local</span></td>
+        <td>Agência Educ</td>
+        <td>Só tarefas alocadas · timer · sem custo</td>
+      </tr>
+      <tr>
+        <td>Visualizador</td>
+        <td><span class="mono">vista@agenciaeduc.local</span></td>
+        <td>Agência Educ</td>
+        <td>Somente leitura</td>
+      </tr>
+      <tr>
+        <td>Super Admin</td>
+        <td><span class="mono">plataforma@gestorjob.local</span></td>
+        <td>—</td>
+        <td>Criar empresas e convites</td>
+      </tr>
+    </table>
+    <p class="footer-note">
+      Em produção com domínio real, a Educraft pode criar usuários com e-mails corporativos do cliente
+      em vez dos endereços <span class="mono">.local</span>.
+    </p>
+
+    <h3>2.2 Login e recuperação de senha</h3>
+    <ol class="steps">
+      <li>Abra a URL → tela de Login.</li>
+      <li>Informe e-mail e senha → <strong>Entrar</strong>.</li>
+      <li>Esqueceu a senha? Use <strong>Recuperar senha</strong> (exige e-mail cadastrado; o link chega por e-mail quando o SES estiver ativo).</li>
+      <li>No canto superior direito, clique nas <strong>iniciais</strong> para abrir o menu: Minha conta / Sair.</li>
+    </ol>
+  </section>
+
+  <!-- 3. PERFIS -->
+  <section class="page-break section">
+    <h2>3. Perfis e o que cada um pode fazer</h2>
+    <table>
+      <tr>
+        <th>Ação</th>
+        <th>Admin</th>
+        <th>Gerente</th>
+        <th>Colaborador</th>
+        <th>Visualizador</th>
+      </tr>
+      <tr><td>Ver Kanban / Lista</td><td>Sim (tudo)</td><td>Sim (tudo)</td><td>Só alocadas*</td><td>Só alocadas*</td></tr>
+      <tr><td>Criar / mover tarefas</td><td>Sim</td><td>Sim</td><td>Configurável</td><td>Não</td></tr>
+      <tr><td>Timer e checklist</td><td>Sim</td><td>Sim</td><td>Sim</td><td>Não</td></tr>
+      <tr><td>Ver custo acumulado</td><td>Sim</td><td>Sim</td><td>Não</td><td>Não</td></tr>
+      <tr><td>Comentar na tarefa</td><td>Sim</td><td>Sim</td><td>Sim</td><td>Não</td></tr>
+      <tr><td>Anexar arquivos</td><td>Sim</td><td>Sim</td><td>Sim</td><td>Não</td></tr>
+      <tr><td>Clientes / Serviços / Equipe</td><td>Sim</td><td>Sim</td><td>Não</td><td>Não</td></tr>
+      <tr><td>Configurações do tenant</td><td>Total</td><td>Parcial</td><td>Não</td><td>Não</td></tr>
+      <tr><td>Permissões (matriz)</td><td>Sim</td><td>Leitura</td><td>Não</td><td>Não</td></tr>
+    </table>
+    <p class="footer-note">* Padrão: colaborador/visualizador veem só tarefas em que estão como responsáveis. Admin pode desligar isso em Configurações.</p>
+
+    <h3>3.1 Super Admin (plataforma)</h3>
+    <p>Entra em <strong>Empresas</strong>: cria agência (plano + limite de usuários), dispara convite do Admin e acompanha status (ativo / trial).</p>
+  </section>
+
+  <!-- 4. PRIMEIRO USO ADMIN -->
+  <section class="page-break section">
+    <h2>4. Começando do zero (Admin da agência)</h2>
+    <p>Há dois caminhos: <strong>(A)</strong> agência nova via convite + wizard, ou <strong>(B)</strong> agência já seedada (demo) — pule direto para a operação.</p>
+
+    <h3>4.1 Caminho A — Convite + Wizard</h3>
+    <ol class="steps">
+      <li>Super Admin cria a empresa e informa nome/e-mail do Admin.</li>
+      <li>Admin abre o link do convite, define a senha e entra.</li>
+      <li>O sistema abre o <strong>Wizard</strong> (obrigatório para Admin até concluir):
+        <ul>
+          <li><strong>Serviços</strong> — nome, preço, checklist padrão, recorrência (opcional)</li>
+          <li><strong>Equipe</strong> — convide pessoas com papel e custo/hora</li>
+          <li><strong>Clientes</strong> — fee mensal é importante para margem futura</li>
+          <li><strong>Feriados</strong> — neste MVP pode pular (calendário = Fase 2)</li>
+          <li><strong>Permissões</strong> — revise a matriz e vá às Configurações se quiser ajustar flags</li>
+        </ul>
+      </li>
+      <li>Ao concluir, você cai no <strong>Kanban vazio</strong> — pronto para criar a primeira tarefa ou ativar recorrência.</li>
+    </ol>
+
+    <h3>4.2 Ordem recomendada de cadastro (sempre)</h3>
+    <ol>
+      <li><span class="tag">1</span> Serviços (com checklist)</li>
+      <li><span class="tag">2</span> Colaboradores (custo/hora preenchido)</li>
+      <li><span class="tag">3</span> Clientes (fee mensal preenchido)</li>
+      <li><span class="tag orange">4</span> Tarefas manuais <em>ou</em> ativar recorrência</li>
+    </ol>
+    <div class="callout warn">
+      <strong>Atenção:</strong> sem custo/hora no colaborador, o timer grava horas mas o custo fica R$&nbsp;0,00.
+      Sem fee no cliente, a margem futura não terá base de comparação.
+    </div>
+  </section>
+
+  <!-- 5. MAPA DO SISTEMA -->
+  <section class="page-break section">
+    <h2>5. Mapa das telas (menu lateral)</h2>
+    <table>
+      <tr><th>Menu</th><th>Para quê</th></tr>
+      <tr><td>Kanban</td><td>Home operacional. Arraste cards entre colunas ou clique para abrir o drawer.</td></tr>
+      <tr><td>Lista</td><td>Mesmas tarefas em tabela (filtros por status/cliente conforme tela).</td></tr>
+      <tr><td>Clientes</td><td>CRUD: fee, contato, CNPJ, pasta Drive (URL), status.</td></tr>
+      <tr><td>Serviços</td><td>CRUD: preço, tempo estimado, checklist, template de recorrência.</td></tr>
+      <tr><td>Colaboradores</td><td>CRUD: papel, custo/hora, carga semanal, convite/senha (Admin).</td></tr>
+      <tr><td>Permissões</td><td>Matriz de leitura das regras por papel.</td></tr>
+      <tr><td>Configurações</td><td>Flags do tenant (criar tarefa, só alocadas, notificações etc.).</td></tr>
+      <tr><td>Empresas</td><td>Só Super Admin — tenants da plataforma.</td></tr>
+    </table>
+
+    <h3>5.1 Colunas do Kanban</h3>
+    <p>
+      <span class="tag">A fazer</span>
+      <span class="tag">Em execução</span>
+      <span class="tag">Em revisão</span>
+      <span class="tag">Aguardando cliente</span>
+      <span class="tag">Aprovado</span>
+      <span class="tag">Concluído</span>
+    </p>
+    <div class="callout">
+      <strong>Atraso não é coluna.</strong> Tarefa atrasada ganha destaque visual (badge/borda). Prazo continua no card/drawer.
+    </div>
+
+    <h3>5.2 Fases do timer (timesheet)</h3>
+    <p>
+      <span class="tag orange">Análise</span>
+      <span class="tag orange">Produção</span>
+      <span class="tag orange">Revisão</span>
+      <span class="tag orange">Correção</span>
+    </p>
+    <ul>
+      <li>Play / Pause no relógio; trocar de fase encerra o apontamento anterior.</li>
+      <li>Retomar a <em>mesma</em> fase continua acumulando; outra fase começa do zero naquele contador.</li>
+      <li>Sair da tela / fechar o drawer tende a pausar o timer aberto (comportamento de proteção).</li>
+    </ul>
+  </section>
+
+  <!-- 6. ROTEIROS DE TESTE -->
+  <section class="page-break section">
+    <h2>6. Roteiros de teste (faça nesta ordem)</h2>
+
+    <h3>Roteiro 1 — Operação diária no Kanban <span class="tag">~10 min</span></h3>
+    <ol class="steps">
+      <li>Login como <strong>Admin</strong> (Mariana ou conta fornecida).</li>
+      <li>No Kanban, clique em <strong>+ Tarefa</strong>: escolha cliente, serviço e título → Criar.</li>
+      <li>Arraste o card de <em>A fazer</em> para <em>Em execução</em>.</li>
+      <li>Abra o card: inicie o timer em <strong>Análise</strong>, depois mude para <strong>Produção</strong>.</li>
+      <li>Marque itens do checklist; anexe um PDF ou imagem pequena (até 10&nbsp;MB; tipos: PDF, JPG, PNG, WEBP, GIF, Word, Excel).</li>
+      <li>Escreva um comentário na timeline e envie.</li>
+      <li>Confira o bloco <strong>Custo acumulado</strong> (só Admin/Gerente).</li>
+      <li>Mova para <em>Em revisão</em> e veja o comentário automático do Sistema na timeline.</li>
+    </ol>
+
+    <h3>Roteiro 2 — Visão do colaborador <span class="tag">~5 min</span></h3>
+    <ol class="steps">
+      <li>Saia e entre como <strong>Colaborador</strong> (Ana).</li>
+      <li>Confirme que só aparecem tarefas em que ela é responsável.</li>
+      <li>Abra uma tarefa: use o timer; <strong>não</strong> deve ver o valor de custo (mensagem de custo oculto).</li>
+      <li>Tente criar cliente — deve ser bloqueado.</li>
+    </ol>
+
+    <h3>Roteiro 3 — Recorrência gera cards <span class="tag">~8 min</span></h3>
+    <ol class="steps">
+      <li>Como Admin, vá em <strong>Serviços</strong> → edite um serviço com frequência (ex.: Post feed · semanal · Ter/Qui/Sáb).</li>
+      <li>No painel <strong>Ativar recorrência no Kanban</strong>: escolha o cliente, título dos cards, responsável (opcional), horizonte (2/4/8 semanas).</li>
+      <li>Clique em <strong>Gerar cards no Kanban</strong>.</li>
+      <li>Volte ao Kanban e confira os cards com briefing “Gerado por recorrência · D-…”.</li>
+      <li>Clique de novo em “Completar horizonte”: não deve duplicar as mesmas datas (idempotente).</li>
+    </ol>
+    <div class="callout">
+      O sistema também completa o horizonte automaticamente todos os dias (~06:30 no servidor) para séries ativas.
+    </div>
+  </section>
+
+  <section class="page-break section">
+    <h2>6. Roteiros de teste (continuação)</h2>
+
+    <h3>Roteiro 4 — Cadastros e exclusões <span class="tag">~8 min</span></h3>
+    <ol class="steps">
+      <li><strong>Clientes:</strong> crie um cliente teste com fee; edite; tente excluir um cliente que já tem tarefas (deve bloquear).</li>
+      <li><strong>Colaboradores:</strong> cadastre alguém com custo/hora; Admin pode redefinir senha do colaborador.</li>
+      <li><strong>Serviços:</strong> altere checklist padrão e veja que novas tarefas herdam a lista.</li>
+    </ol>
+
+    <h3>Roteiro 5 — Configurações e permissões <span class="tag">~5 min</span></h3>
+    <ol class="steps">
+      <li>Abra <strong>Configurações</strong> e revise as flags (ex.: colaborador só vê alocadas, notif e-mail/in-app).</li>
+      <li>Abra <strong>Permissões</strong> e confira a matriz por papel.</li>
+      <li>Salve uma alteração e valide o efeito entrando com outro perfil.</li>
+    </ol>
+
+    <h3>Roteiro 6 — Super Admin (opcional) <span class="tag">~7 min</span></h3>
+    <ol class="steps">
+      <li>Login como plataforma → <strong>Empresas</strong> → + Empresa.</li>
+      <li>Defina plano, limite de usuários (seats) e e-mail do Admin.</li>
+      <li>Abra o link de convite gerado, defina senha e percorra o wizard.</li>
+      <li>Teste o limite de seats: ao atingir o teto, novo colaborador deve ser bloqueado.</li>
+    </ol>
+
+    <h3>Roteiro 7 — Notificações e prazo <span class="tag">~5 min</span></h3>
+    <ol class="steps">
+      <li>Como Admin, aloque o colaborador numa tarefa e/ou mova o status — o sino deve receber notificação in-app.</li>
+      <li>Coloque prazo = hoje numa tarefa aberta; com flag de e-mail ligada, o job diário (~07:00) envia aviso (depende do SES em produção).</li>
+    </ol>
+  </section>
+
+  <!-- 7. DETALHE DO DRAWER -->
+  <section class="page-break section">
+    <h2>7. Anatomia do drawer da tarefa</h2>
+    <div class="two-col">
+      <div class="card-mini">
+        <h4>Coluna Execução</h4>
+        <ul>
+          <li>Status e prioridade</li>
+          <li>Timer + fases</li>
+          <li>Checklist</li>
+          <li>Briefing</li>
+          <li>Comentários / timeline</li>
+        </ul>
+      </div>
+      <div class="card-mini">
+        <h4>Coluna Contexto</h4>
+        <ul>
+          <li>Cliente e serviço</li>
+          <li>Custo acumulado (Admin/Gerente)</li>
+          <li>Anexos</li>
+          <li>Botões para mover status</li>
+          <li>Excluir (se permitido e sem horas)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout danger">
+      <strong>Excluir tarefa:</strong> só com permissão e se <em>não</em> houver horas apontadas.
+      Checklist e anexos somem junto.
+    </div>
+
+    <h3>7.1 Anexos — regras</h3>
+    <ul>
+      <li>Tipos aceitos: PDF, JPG, PNG, WEBP, GIF, DOC/DOCX, XLS/XLSX</li>
+      <li>Tamanho máximo: 10&nbsp;MB por arquivo</li>
+      <li>Arquivos fora da lista são rejeitados antes do envio</li>
+    </ul>
+  </section>
+
+  <!-- 8. BOAS PRÁTICAS -->
+  <section class="section">
+    <h2>8. Boas práticas no dia a dia</h2>
+    <ul>
+      <li>Sempre preencha <strong>custo/hora</strong> e <strong>fee</strong> antes de medir produtividade.</li>
+      <li>Use fases do timer de verdade (não deixe tudo em “Produção”).</li>
+      <li>Prefira recorrência para entregas semanais (posts, reels) em vez de criar card a card.</li>
+      <li>Comente decisões e links no drawer — a timeline substitui chat solto.</li>
+      <li>Não use a coluna do Kanban para “atrasado”: ajuste o prazo e trate o badge.</li>
+      <li>Admin: revise Configurações no início (quem cria tarefa, quem exclui, notificações).</li>
+    </ul>
+  </section>
+
+  <!-- 9. CHECKLIST -->
+  <section class="page-break section">
+    <h2>9. Checklist de aceite do cliente</h2>
+    <p>Marque após validar no ambiente entregue:</p>
+    <ul class="checklist">
+      <li>Consigo entrar com a conta Admin fornecida</li>
+      <li>Consigo cadastrar Cliente, Serviço e Colaborador</li>
+      <li>Consigo criar tarefa e mover no Kanban (arrastar e botões)</li>
+      <li>Timer inicia, pausa e troca de fase corretamente</li>
+      <li>Checklist e anexos funcionam no drawer</li>
+      <li>Comentário aparece na timeline; mudança de status gera linha do Sistema</li>
+      <li>Admin vê custo acumulado; Colaborador não vê</li>
+      <li>Recorrência gera cards sem duplicar ao gerar de novo</li>
+      <li>Colaborador só vê tarefas alocadas (com flag padrão)</li>
+      <li>Visualizador não cria/edita/timer</li>
+      <li>Notificação in-app aparece no sino</li>
+      <li>Recuperar senha / Minha conta (troca de senha) ok</li>
+      <li>Entendi o que fica para Fase 2 (calendário e dashboard de margem)</li>
+    </ul>
+
+    <h3>9.1 Registro de validação</h3>
+    <table>
+      <tr><th>Campo</th><th>Preenchimento</th></tr>
+      <tr><td>Empresa / agência</td><td>&nbsp;</td></tr>
+      <tr><td>Responsável pelo teste</td><td>&nbsp;</td></tr>
+      <tr><td>Data</td><td>&nbsp;</td></tr>
+      <tr><td>Ambiente testado</td><td>☐ Produção &nbsp; ☐ Homologação / demo</td></tr>
+      <tr><td>Resultado</td><td>☐ Aprovado &nbsp; ☐ Aprovado com ressalvas &nbsp; ☐ Retrabalho</td></tr>
+      <tr><td>Observações</td><td style="height: 48px;">&nbsp;</td></tr>
+      <tr><td>Assinatura</td><td style="height: 36px;">&nbsp;</td></tr>
+    </table>
+  </section>
+
+  <!-- 10. SUPORTE -->
+  <section class="section">
+    <h2>10. Suporte e próximos passos</h2>
+    <div class="two-col">
+      <div class="card-mini">
+        <h4>Em caso de dúvida</h4>
+        <p>Acione a Educraft com: URL usada, usuário (sem senha), print da tela e horário aproximado.</p>
+      </div>
+      <div class="card-mini">
+        <h4>Próxima entrega (Fase 2)</h4>
+        <p>Dashboard de margem, relatórios (atrasos, horas, carga), calendário e feriados.</p>
+      </div>
+    </div>
+    <p class="footer-note">
+      Documento gerado para entrega ao cliente · Gestor Job · Educraft · 16/08/2026 ·
+      Slogan: Organize · Descomplique.
+    </p>
+  </section>
+
+</body>
+</html>
