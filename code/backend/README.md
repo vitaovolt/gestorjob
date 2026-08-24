@@ -27,4 +27,5 @@ Deploy: ver `docs/DEPLOY.md` na raiz do monorepo.
 - Controllers: `app/Http/Controllers/Api`
 - Auth Sanctum (HasApiTokens) — login na F2
 - Fila: `QUEUE_CONNECTION=database` (jobs table). Worker entra quando houver e-mail (F4)
-- Anexos: disco `anexos` em `storage/app/private/anexos` (upload no drawer da tarefa)
+- Anexos: S3 `s3://gestorjob/anexos` (privado; download pela API). PHPUnit usa disco local fake.
+- Backup Postgres: `gestor:backup-postgres` → `s3://gestorjob/postgres` (diário 02:30, 14 dias)

@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('gestor:avisos-prazo')->dailyAt('07:00');
 Schedule::command('gestor:gerar-recorrencias')->dailyAt('06:30');
+Schedule::command('gestor:backup-postgres')->dailyAt('02:30')->withoutOverlapping();

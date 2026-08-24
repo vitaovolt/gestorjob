@@ -108,14 +108,54 @@ FRONTEND_URL=https://app.gestorjob.com.br
 DB_CONNECTION=pgsql
 DB_DATABASE=gestor_job
 QUEUE_CONNECTION=database
+ANEXOS_DISK=s3
+AWS_BUCKET=gestorjob
+AWS_DEFAULT_REGION=us-east-1
 ```
 
 SPA build: `VITE_API_URL=/api/v1` (proxy Nginx no mesmo domínio).
+
+Bucket S3 **`gestorjob`** (privado, SSE-S3):
+
+| Prefixo | Conteúdo |
+|---------|----------|
+| `anexos/` | Upload/download de arquivos das tarefas (API; nada em disco local) |
+| `postgres/` | Dump diário `gestor:backup-postgres` às 02:30 (gzip, 14 dias) |
+
+A IAM do SES (mesmas `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) precisa de:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::gestorjob"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::gestorjob/anexos/*",
+        "arn:aws:s3:::gestorjob/postgres/*"
+      ]
+    }
+  ]
+}
+```
+
+Bucket: privado, Block Public Access, SSE-S3. `ANEXOS_DISK=local` só nos testes PHPUnit.
+
+No host: `sudo apt install -y postgresql-client` (o `gestor:backup-postgres` usa `pg_dump` em memória → S3, sem arquivo local). Após alterar o `.env`: `php artisan config:cache`.
+
+Opcional (além do scheduler Laravel): `deploy/scripts/backup-postgres-s3.sh` (pipe `pg_dump | gzip` → S3).
 
 ## Artefatos no repo
 
 - `deploy/nginx/app.gestorjob.com.br.conf`
 - `deploy/systemd/gestorjob-queue.service`
+- `deploy/scripts/backup-postgres-s3.sh`
 
 ## Smoke pós-deploy
 

@@ -63,6 +63,7 @@ class AnexoTarefaTest extends TestCase
         ]);
         Storage::disk(TarefaAnexo::DISCO)->assertExists($anexo->path);
         $this->assertGreaterThan(0, $anexo->tamanho_bytes);
+        $this->assertSame('local', config('filesystems.disks.anexos.driver'));
     }
 
     public function test_download_devolve_o_arquivo(): void

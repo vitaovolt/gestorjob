@@ -24,15 +24,25 @@ class DeployReadinessTest extends TestCase
 
         $this->assertStringContainsString('gestor:avisos-prazo', $out);
         $this->assertStringContainsString('gestor:gerar-recorrencias', $out);
+        $this->assertStringContainsString('gestor:backup-postgres', $out);
     }
 
     public function test_env_example_tem_chaves_de_producao(): void
     {
         $env = File::get(base_path('.env.example'));
 
-        foreach (['APP_URL=', 'FRONTEND_URL=', 'DB_CONNECTION=pgsql', 'QUEUE_CONNECTION='] as $needle) {
+        foreach (['APP_URL=', 'FRONTEND_URL=', 'DB_CONNECTION=pgsql', 'QUEUE_CONNECTION=', 'ANEXOS_DISK=', 'AWS_BUCKET=gestorjob'] as $needle) {
             $this->assertStringContainsString($needle, $env);
         }
+    }
+
+    public function test_discos_s3_usam_prefixos_anexos_e_postgres(): void
+    {
+        $cfg = File::get(config_path('filesystems.php'));
+
+        $this->assertStringContainsString("'root' => 'anexos'", $cfg);
+        $this->assertStringContainsString("'root' => 'postgres'", $cfg);
+        $this->assertStringContainsString("'bucket' => env('AWS_BUCKET', 'gestorjob')", $cfg);
     }
 
     public function test_workflows_ci_e_deploy_existem_na_raiz(): void
