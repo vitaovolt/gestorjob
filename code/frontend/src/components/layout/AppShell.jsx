@@ -24,7 +24,7 @@ export default function AppShell({ title, cta, children }) {
   const [saindo, setSaindo] = useState(false)
   const [menuAberto, setMenuAberto] = useState(false)
   const superAdmin = ehSuperAdmin(user)
-  const visaoTarefas = !superAdmin && (location.pathname === '/' || location.pathname === '/lista')
+  const visaoTarefas = !superAdmin && (location.pathname === '/' || location.pathname === '/lista' || location.pathname.startsWith('/tarefas'))
   const verConfig = Boolean(user?.permissoes?.ver_config)
 
   useEffect(() => {
@@ -178,6 +178,15 @@ export default function AppShell({ title, cta, children }) {
         </header>
         <div className="min-h-0 flex-1 overflow-auto p-5">{children}</div>
       </div>
+      {cta?.to && visaoTarefas && location.pathname !== '/tarefas/nova' ? (
+        <Link
+          to={cta.to}
+          data-testid="fab-nova-tarefa"
+          className="fixed right-5 bottom-5 z-30 rounded-full bg-[var(--orange)] px-4 py-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(232,93,4,0.35)] md:hidden"
+        >
+          {cta.label}
+        </Link>
+      ) : null}
     </div>
   )
 }

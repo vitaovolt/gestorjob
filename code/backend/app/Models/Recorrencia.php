@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\PertenceAEmpresa;
+use App\Support\Expediente;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +19,12 @@ class Recorrencia extends Model
         'cliente_id',
         'servico_id',
         'titulo',
+        'briefing',
+        'checklist',
+        'frequencia',
+        'dias',
         'responsavel_id',
+        'responsavel_ids',
         'horizonte_semanas',
         'ativa',
     ];
@@ -28,6 +34,9 @@ class Recorrencia extends Model
         return [
             'horizonte_semanas' => 'integer',
             'ativa' => 'boolean',
+            'dias' => 'array',
+            'responsavel_ids' => 'array',
+            'checklist' => 'array',
         ];
     }
 
@@ -62,17 +71,40 @@ class Recorrencia extends Model
     }
 
     /**
-     * @return array{frequencia:?string,dias:list<string>,prazo_d_menos:int}
+     * @return list<int>
+     */
+    public function idsResponsaveis(): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $this->responsavel_ids ?? [])));
+        if ($ids !== []) {
+            return $ids;
+        }
+
+        return $this->responsavel_id ? [(int) $this->responsavel_id] : [];
+    }
+
+    /**
+     * @return array{frequencia:?string,dias:list<string>}
      */
     public function template(): array
     {
-        $this->loadMissing('servico');
-        $rec = is_array($this->servico?->recorrencia) ? $this->servico->recorrencia : [];
+        $this->loadMissing(['servico', 'empresa']);
+        $freq = $this->frequencia;
+        $dias = array_values(array_filter(array_map('strval', $this->dias ?? [])));
+
+        if (! $freq) {
+            $rec = is_array($this->servico?->recorrencia) ? $this->servico->recorrencia : [];
+            $freq = $rec['frequencia'] ?? null;
+            $dias = array_values(array_filter(array_map('strval', $rec['dias'] ?? [])));
+        }
+
+        if ($freq === 'diaria') {
+            $dias = Expediente::da($this->empresa)->dias();
+        }
 
         return [
-            'frequencia' => $rec['frequencia'] ?? null,
-            'dias' => array_values(array_filter(array_map('strval', $rec['dias'] ?? []))),
-            'prazo_d_menos' => (int) ($rec['prazo_d_menos'] ?? 1),
+            'frequencia' => $freq,
+            'dias' => $dias,
         ];
     }
 }

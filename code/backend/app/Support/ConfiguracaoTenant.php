@@ -15,7 +15,11 @@ class ConfiguracaoTenant
         'notif_in_app' => true,
         'digest_diario' => false,
         'colaborador_so_alocadas' => true,
+        'expediente_dias' => ['seg', 'ter', 'qua', 'qui', 'sex'],
+        'expediente_hora_fim' => '18:00',
     ];
+
+    public const DIAS_SEMANA = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
 
     public const CHAVES_GERENTE = [
         'notif_email',
@@ -32,19 +36,59 @@ class ConfiguracaoTenant
     }
 
     /**
+     * @return list<string>
+     */
+    public static function chavesBool(): array
+    {
+        return array_values(array_filter(
+            self::chaves(),
+            fn (string $chave) => is_bool(self::PADRAO[$chave]),
+        ));
+    }
+
+    /**
      * @param  array<string, mixed>|null  $salvo
-     * @return array<string, bool>
+     * @return array<string, mixed>
      */
     public static function mesclar(?array $salvo): array
     {
         $merged = [];
         foreach (self::PADRAO as $chave => $padrao) {
-            $merged[$chave] = array_key_exists($chave, $salvo ?? [])
-                ? (bool) $salvo[$chave]
-                : $padrao;
+            if (! array_key_exists($chave, $salvo ?? [])) {
+                $merged[$chave] = $padrao;
+
+                continue;
+            }
+            $merged[$chave] = self::normalizar($chave, $salvo[$chave], $padrao);
         }
 
         return $merged;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $salvo
+     */
+    public static function normalizar(string $chave, mixed $valor, mixed $padrao): mixed
+    {
+        if (is_bool($padrao)) {
+            return (bool) $valor;
+        }
+        if ($chave === 'expediente_hora_fim') {
+            $hora = is_string($valor) ? trim($valor) : '';
+
+            return preg_match('/^\d{2}:\d{2}$/', $hora) ? $hora : $padrao;
+        }
+        if ($chave === 'expediente_dias') {
+            $lista = is_array($valor) ? $valor : [];
+            $filtrada = array_values(array_filter(
+                array_map('strval', $lista),
+                fn (string $dia) => in_array($dia, self::DIAS_SEMANA, true),
+            ));
+
+            return $filtrada !== [] ? $filtrada : $padrao;
+        }
+
+        return $valor ?? $padrao;
     }
 
     /**
@@ -83,6 +127,16 @@ class ConfiguracaoTenant
                     'celulas' => [
                         'admin' => self::celula('sim', true),
                         'gerente' => self::celula('config', $c['gerente_exclui_tarefas'], 'gerente_exclui_tarefas'),
+                        'colaborador' => self::celula('nao', false),
+                        'visualizador' => self::celula('nao', false),
+                    ],
+                ],
+                [
+                    'id' => 'alocar',
+                    'label' => 'Alocar responsáveis',
+                    'celulas' => [
+                        'admin' => self::celula('sim', true),
+                        'gerente' => self::celula('sim', true),
                         'colaborador' => self::celula('nao', false),
                         'visualizador' => self::celula('nao', false),
                     ],

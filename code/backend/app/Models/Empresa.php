@@ -45,7 +45,7 @@ class Empresa extends Model
     }
 
     /**
-     * @return array<string, bool>|bool|null
+     * @return array<string, mixed>|mixed|null
      */
     public function config(?string $chave = null): mixed
     {

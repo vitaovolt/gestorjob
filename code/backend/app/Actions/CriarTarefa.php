@@ -3,7 +3,6 @@
 namespace App\Actions;
 
 use App\Models\Notificacao;
-use App\Models\Servico;
 use App\Models\Tarefa;
 
 class CriarTarefa
@@ -14,18 +13,15 @@ class CriarTarefa
 
     public function handle(array $dados, ?int $atorId = null): Tarefa
     {
-        $servico = isset($dados['servico_id'])
-            ? Servico::query()->find($dados['servico_id'])
-            : null;
-
         $tarefa = Tarefa::query()->create([
             'empresa_id' => $dados['empresa_id'] ?? null,
             'cliente_id' => $dados['cliente_id'],
             'servico_id' => $dados['servico_id'] ?? null,
             'titulo' => $dados['titulo'],
-            'status' => $dados['status'] ?? 'a_fazer',
+            'status' => 'a_fazer',
             'prioridade' => $dados['prioridade'] ?? 'media',
             'prazo_em' => $dados['prazo_em'] ?? null,
+            'inicio_em' => $dados['inicio_em'] ?? now()->toDateString(),
             'briefing' => $dados['briefing'] ?? null,
             'recorrente' => (bool) ($dados['recorrente'] ?? false),
             'recorrencia_id' => $dados['recorrencia_id'] ?? null,
@@ -37,7 +33,7 @@ class CriarTarefa
             $tarefa->responsaveis()->sync($ids);
         }
 
-        $checklist = $dados['checklist'] ?? $servico?->checklist_padrao ?? [];
+        $checklist = $dados['checklist'] ?? [];
         foreach (array_values($checklist) as $ordem => $item) {
             $titulo = is_array($item) ? (string) ($item['titulo'] ?? '') : (string) $item;
             if ($titulo === '') {

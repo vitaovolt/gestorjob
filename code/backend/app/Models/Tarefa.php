@@ -31,6 +31,7 @@ class Tarefa extends Model
         'servico_id',
         'recorrencia_id',
         'ocorrencia_em',
+        'inicio_em',
         'titulo',
         'status',
         'prioridade',
@@ -45,6 +46,7 @@ class Tarefa extends Model
         return [
             'prazo_em' => 'datetime',
             'ocorrencia_em' => 'date',
+            'inicio_em' => 'date',
             'recorrente' => 'boolean',
         ];
     }
@@ -59,6 +61,9 @@ class Tarefa extends Model
         if ($user->ehSuperAdmin() || (int) $this->empresa_id !== (int) $user->empresa_id) {
             return false;
         }
+        if ($user->veSoTarefasAlocadas() && $this->agendada()) {
+            return false;
+        }
         if (! $user->veSoTarefasAlocadas()) {
             return true;
         }
@@ -66,13 +71,35 @@ class Tarefa extends Model
         return $this->responsaveis()->where('users.id', $user->id)->exists();
     }
 
+    public function agendada(): bool
+    {
+        return $this->inicio_em !== null && $this->inicio_em->isAfter(now()->startOfDay());
+    }
+
     public function scopeVisiveisPara($query, User $user)
     {
-        if (! $user->veSoTarefasAlocadas()) {
-            return $query;
+        if ($user->veSoTarefasAlocadas()) {
+            $query->whereHas('responsaveis', fn ($q) => $q->where('users.id', $user->id))
+                ->where(function ($q) {
+                    $q->whereNull('inicio_em')->orWhereDate('inicio_em', '<=', now()->toDateString());
+                });
         }
 
-        return $query->whereHas('responsaveis', fn ($q) => $q->where('users.id', $user->id));
+        return $query;
+    }
+
+    public function scopeFiltrarVisao($query, ?string $visao)
+    {
+        if ($visao === 'atrasadas') {
+            return $query->abertas()
+                ->whereNotNull('prazo_em')
+                ->where('prazo_em', '<', now());
+        }
+        if ($visao === 'agendadas') {
+            return $query->whereDate('inicio_em', '>', now()->toDateString());
+        }
+
+        return $query;
     }
 
     public function empresa(): BelongsTo

@@ -4,22 +4,13 @@ namespace App\Actions;
 
 use App\Models\Recorrencia;
 use App\Models\Tarefa;
+use App\Support\Expediente;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
 
 class GerarCardsRecorrencia
 {
-    private const DIAS = [
-        'dom' => Carbon::SUNDAY,
-        'seg' => Carbon::MONDAY,
-        'ter' => Carbon::TUESDAY,
-        'qua' => Carbon::WEDNESDAY,
-        'qui' => Carbon::THURSDAY,
-        'sex' => Carbon::FRIDAY,
-        'sab' => Carbon::SATURDAY,
-    ];
-
     public function __construct(
         private CriarTarefa $criarTarefa,
     ) {}
@@ -27,18 +18,19 @@ class GerarCardsRecorrencia
     /**
      * @return array{criadas:int,puladas:int}
      */
-    public function handle(Recorrencia $recorrencia): array
+    public function handle(Recorrencia $recorrencia, mixed $aPartirDe = null): array
     {
-        $recorrencia->loadMissing(['servico', 'cliente']);
+        $recorrencia->loadMissing(['servico', 'cliente', 'empresa']);
         $template = $recorrencia->template();
         if (! $template['frequencia']) {
             return ['criadas' => 0, 'puladas' => 0];
         }
 
-        $datas = $this->datasOcorrencia($template, (int) $recorrencia->horizonte_semanas);
+        $expediente = Expediente::da($recorrencia->empresa);
+        $datas = $this->datasOcorrencia($template, (int) $recorrencia->horizonte_semanas, $expediente, $aPartirDe);
         $criadas = 0;
         $puladas = 0;
-        $dMenos = $template['prazo_d_menos'];
+        $responsaveis = $recorrencia->idsResponsaveis();
 
         foreach ($datas as $ocorrencia) {
             $existe = Tarefa::withoutGlobalScopes()
@@ -52,20 +44,20 @@ class GerarCardsRecorrencia
                 continue;
             }
 
-            DB::transaction(function () use ($recorrencia, $ocorrencia, $dMenos, &$criadas) {
+            DB::transaction(function () use ($recorrencia, $ocorrencia, $expediente, $responsaveis, &$criadas) {
                 $this->criarTarefa->handle([
                     'empresa_id' => $recorrencia->empresa_id,
                     'cliente_id' => $recorrencia->cliente_id,
                     'servico_id' => $recorrencia->servico_id,
                     'titulo' => $recorrencia->titulo,
-                    'prazo_em' => $ocorrencia->copy()->setTime(18, 0),
-                    'briefing' => 'Gerado por recorrência · D-'.$dMenos.'.',
+                    'prazo_em' => $expediente->aplicarHora($ocorrencia),
+                    'inicio_em' => $ocorrencia->toDateString(),
+                    'briefing' => $recorrencia->briefing ?: 'Gerado por recorrência.',
+                    'checklist' => $recorrencia->checklist ?? [],
                     'recorrente' => true,
                     'recorrencia_id' => $recorrencia->id,
                     'ocorrencia_em' => $ocorrencia->toDateString(),
-                    'responsavel_ids' => $recorrencia->responsavel_id
-                        ? [(int) $recorrencia->responsavel_id]
-                        : [],
+                    'responsavel_ids' => $responsaveis,
                 ]);
 
                 $criadas++;
@@ -76,12 +68,16 @@ class GerarCardsRecorrencia
     }
 
     /**
-     * @param  array{frequencia:?string,dias:list<string>,prazo_d_menos:int}  $template
+     * @param  array{frequencia:?string,dias:list<string>}  $template
      * @return list<Carbon>
      */
-    private function datasOcorrencia(array $template, int $horizonteSemanas): array
+    private function datasOcorrencia(array $template, int $horizonteSemanas, Expediente $expediente, mixed $aPartirDe = null): array
     {
-        $inicio = now()->startOfDay();
+        $hoje = now()->startOfDay();
+        $inicio = $aPartirDe ? Carbon::parse($aPartirDe)->startOfDay() : $hoje->copy();
+        if ($inicio->lt($hoje)) {
+            $inicio = $hoje->copy();
+        }
         $fim = $inicio->copy()->addWeeks(max(1, $horizonteSemanas))->endOfDay();
         $datas = [];
 
@@ -102,9 +98,12 @@ class GerarCardsRecorrencia
 
         $diasSemana = [];
         foreach ($template['dias'] as $dia) {
-            if (isset(self::DIAS[$dia])) {
-                $diasSemana[] = self::DIAS[$dia];
+            if (isset(Expediente::DIAS[$dia])) {
+                $diasSemana[] = Expediente::DIAS[$dia];
             }
+        }
+        if ($diasSemana === [] && ($template['frequencia'] ?? '') === 'diaria') {
+            $diasSemana = $expediente->diasDaSemanaCarbon();
         }
         if ($diasSemana === []) {
             return [];

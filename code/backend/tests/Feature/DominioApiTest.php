@@ -55,7 +55,6 @@ class DominioApiTest extends TestCase
         $servico = $this->postJson('/api/v1/servicos', [
             'nome' => 'Reels Instagram',
             'preco_venda' => 450,
-            'checklist_padrao' => ['Briefing', 'Arte', 'Copy'],
         ]);
         $servico->assertCreated();
         $servicoId = $servico->json('data.id');
@@ -72,6 +71,7 @@ class DominioApiTest extends TestCase
             'titulo' => 'Reels — Educ',
             'prioridade' => 'urgente',
             'responsavel_ids' => [$admin->id],
+            'checklist' => ['Briefing', 'Arte', 'Copy'],
         ]);
 
         $tarefa->assertCreated()

@@ -14,8 +14,6 @@ test('CRUD de serviço na tela', async ({ page }) => {
   await page.getByTestId('servico-preco').pressSequentially('250000')
   await expect(page.getByTestId('servico-preco')).toHaveValue('2.500,00')
   await page.getByTestId('servico-tempo').fill('240')
-  await page.getByTestId('servico-frequencia').selectOption('semanal')
-  await page.getByTestId('servico-checklist').fill('Briefing\nArte\nPublicar')
   await page.getByRole('button', { name: 'Salvar serviço' }).click()
 
   await expect(page.getByTestId('toast')).toContainText('Serviço criado')

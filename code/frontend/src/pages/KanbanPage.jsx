@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { getTarefa, listClientes, listServicos, listTarefas, updateTarefa } from '../api/dominio'
+import { getTarefa, listTarefas, updateTarefa } from '../api/dominio'
 import AppShell from '../components/layout/AppShell.jsx'
-import CreateTaskModal from '../components/kanban/CreateTaskModal.jsx'
 import TaskDrawer from '../components/kanban/TaskDrawer.jsx'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -12,20 +11,19 @@ export default function KanbanPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const [tarefas, setTarefas] = useState([])
-  const [clientes, setClientes] = useState([])
-  const [servicos, setServicos] = useState([])
   const [aberta, setAberta] = useState(null)
-  const [criar, setCriar] = useState(false)
+  const [visao, setVisao] = useState('todas')
   const [erro, setErro] = useState('')
   const [overCol, setOverCol] = useState(null)
   const movingRef = useRef(false)
   const draggedRef = useRef(false)
 
-  async function recarregar() {
-    const [t, c, s] = await Promise.all([listTarefas(), listClientes(), listServicos()])
+  const verAgendadas = user?.papel === 'admin' || user?.papel === 'gerente'
+
+  async function recarregar(filtro = visao) {
+    const params = filtro === 'todas' ? undefined : { visao: filtro }
+    const t = await listTarefas(params)
     setTarefas(t.data || [])
-    setClientes(c.data || [])
-    setServicos(s.data || [])
   }
 
   useEffect(() => {
@@ -33,7 +31,11 @@ export default function KanbanPage() {
       setErro('Não foi possível carregar o quadro. Confira se a API está no ar.')
       showToast('Não foi possível carregar o Kanban. Suba a API em :8000.', 'erro')
     })
-  }, [])
+  }, [visao])
+
+  function escolherVisao(proxima) {
+    setVisao(proxima)
+  }
 
   async function abrir(tarefa) {
     if (draggedRef.current) {
@@ -51,12 +53,6 @@ export default function KanbanPage() {
   function onAtualizada(tarefa) {
     setAberta(tarefa)
     setTarefas((lista) => lista.map((item) => (item.id === tarefa.id ? { ...item, ...tarefa } : item)))
-  }
-
-  function onCriada(tarefa) {
-    setTarefas((lista) => [tarefa, ...lista])
-    setCriar(false)
-    setAberta(tarefa)
   }
 
   function onExcluida(id) {
@@ -104,12 +100,33 @@ export default function KanbanPage() {
   return (
     <AppShell
       title="Kanban"
-      cta={temPermissao(user, 'criar_tarefas') ? { label: '+ Tarefa', onClick: () => setCriar(true) } : undefined}
+      cta={temPermissao(user, 'criar_tarefas') ? { label: '+ Tarefa', to: '/tarefas/nova' } : undefined}
     >
       {erro ? <p className="mb-3 font-semibold text-[#b42318]">{erro}</p> : null}
-      <p className="mt-0 mb-3 text-sm text-[var(--muted)]">
-        Arraste o card para outra coluna, ou clique para abrir o timer.
-      </p>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <p className="m-0 mr-auto text-sm text-[var(--muted)]">
+          Arraste o card para outra coluna, ou clique para abrir o timer.
+        </p>
+        {[
+          ['todas', 'Todas'],
+          ['atrasadas', 'Atrasadas'],
+          ...(verAgendadas ? [['agendadas', 'Agendadas']] : []),
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            data-testid={`visao-${id}`}
+            onClick={() => escolherVisao(id)}
+            className={`rounded-full border px-3 py-1 text-xs font-extrabold ${
+              visao === id
+                ? 'border-[var(--orange)] bg-[var(--orange-soft)] text-[var(--orange)]'
+                : 'border-[var(--line)] text-[var(--moss)]'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="flex min-h-[70vh] gap-3 overflow-x-auto pb-4" data-testid="kanban-board">
         {COLUNAS.map((col) => {
           const cards = tarefas.filter((t) => t.status === col.id)
@@ -176,14 +193,6 @@ export default function KanbanPage() {
 
       {aberta ? (
         <TaskDrawer tarefa={aberta} onClose={() => setAberta(null)} onAtualizada={onAtualizada} onExcluida={onExcluida} />
-      ) : null}
-      {criar ? (
-        <CreateTaskModal
-          clientes={clientes}
-          servicos={servicos}
-          onClose={() => setCriar(false)}
-          onCriada={onCriada}
-        />
       ) : null}
     </AppShell>
   )

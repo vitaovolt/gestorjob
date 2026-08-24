@@ -32,15 +32,28 @@ export default function TaskDrawer({ tarefa, onClose, onAtualizada, onExcluida }
   const podeAnexar = temPermissao(user, 'anexar')
   const podeComentar = temPermissao(user, 'comentar')
   const verFinanceiro = temPermissao(user, 'ver_financeiro')
+  const timerAoAbrir = temPermissao(user, 'timer_ao_abrir')
+  const podeOperar = temPermissao(user, 'operar_tarefas')
   const aberto = Boolean(tarefa?.timer_aberto?.iniciado_em)
   const timer = tarefa?.timer_aberto
   const [now, setNow] = useState(() => Date.now())
+  const autoTimerRef = useRef(null)
 
   useEffect(() => {
     if (!aberto) return undefined
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
   }, [aberto, timer?.id])
+
+  useEffect(() => {
+    if (!tarefa?.id || !timerAoAbrir || !podeOperar) return undefined
+    if (tarefa.timer_aberto?.iniciado_em) return undefined
+    if (autoTimerRef.current === tarefa.id) return undefined
+    autoTimerRef.current = tarefa.id
+    const fase = tarefa.fase_timer || 'producao'
+    run('play', () => iniciarTimer(tarefa.id, fase), 'Timer em andamento')
+    return undefined
+  }, [tarefa?.id])
 
   if (!tarefa) return null
 

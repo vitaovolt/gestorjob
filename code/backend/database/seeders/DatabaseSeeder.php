@@ -139,7 +139,6 @@ class DatabaseSeeder extends Seeder
                 'preco_venda' => 280,
                 'tempo_estimado_minutos' => 120,
                 'checklist_padrao' => ['Briefing', 'Arte', 'Copy', 'Agendar'],
-                'recorrencia' => ['frequencia' => 'semanal', 'dias' => ['ter', 'qui', 'sab'], 'prazo_d_menos' => 1],
             ]
         );
 
@@ -179,5 +178,18 @@ class DatabaseSeeder extends Seeder
                 'custo_hora_snapshot' => 70,
             ]);
         }
+
+        $atrasada = Tarefa::query()->updateOrCreate(
+            ['empresa_id' => $educ->id, 'titulo' => 'Copy atrasada Educ'],
+            [
+                'cliente_id' => $clienteEduc->id,
+                'servico_id' => $reels->id,
+                'status' => 'a_fazer',
+                'prioridade' => 'alta',
+                'prazo_em' => now()->subDay()->setTime(18, 0),
+                'briefing' => 'Texto do feed que passou do expediente.',
+            ]
+        );
+        $atrasada->responsaveis()->syncWithoutDetaching([$ana->id]);
     }
 }

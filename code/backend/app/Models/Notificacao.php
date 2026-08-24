@@ -16,6 +16,12 @@ class Notificacao extends Model
 
     public const TIPO_PRAZO_HOJE = 'prazo_hoje';
 
+    public const TIPO_ANEXO = 'anexo';
+
+    public const TIPO_TAREFA_ENTREGUE = 'tarefa_entregue';
+
+    public const TIPO_CHECKLIST_ITEM = 'checklist_item';
+
     protected $table = 'notificacoes';
 
     protected $fillable = [

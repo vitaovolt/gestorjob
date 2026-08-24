@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ConfiguracaoTenant;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,8 +22,12 @@ class StoreRecorrenciaRequest extends FormRequest
 
         return [
             'cliente_id' => ['required', 'integer', Rule::exists('clientes', 'id')->where('empresa_id', $empresaId)],
-            'servico_id' => ['required', 'integer', Rule::exists('servicos', 'id')->where('empresa_id', $empresaId)],
+            'servico_id' => ['nullable', 'integer', Rule::exists('servicos', 'id')->where('empresa_id', $empresaId)],
             'titulo' => ['required', 'string', 'max:180'],
+            'frequencia' => ['required', 'string', Rule::in(['diaria', 'semanal'])],
+            'dias' => ['nullable', 'array'],
+            'dias.*' => ['string', Rule::in(ConfiguracaoTenant::DIAS_SEMANA)],
+            'briefing' => ['nullable', 'string'],
             'responsavel_id' => [
                 'nullable',
                 'integer',
@@ -30,6 +35,8 @@ class StoreRecorrenciaRequest extends FormRequest
                     ->where('empresa_id', $empresaId)
                     ->whereIn('papel', ['admin', 'gerente', 'colaborador'])),
             ],
+            'responsavel_ids' => ['nullable', 'array'],
+            'responsavel_ids.*' => ['integer', Rule::exists('users', 'id')->where('empresa_id', $empresaId)],
             'horizonte_semanas' => ['nullable', 'integer', 'min:1', 'max:12'],
         ];
     }

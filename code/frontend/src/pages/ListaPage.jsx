@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { getTarefa, listClientes, listServicos, listTarefas } from '../api/dominio'
+import { useEffect, useState } from 'react'
+import { getTarefa, listTarefas } from '../api/dominio'
 import AppShell from '../components/layout/AppShell.jsx'
-import CreateTaskModal from '../components/kanban/CreateTaskModal.jsx'
 import TaskDrawer from '../components/kanban/TaskDrawer.jsx'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -12,29 +11,24 @@ export default function ListaPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const [tarefas, setTarefas] = useState([])
-  const [clientes, setClientes] = useState([])
-  const [servicos, setServicos] = useState([])
   const [aberta, setAberta] = useState(null)
-  const [criar, setCriar] = useState(false)
+  const [visao, setVisao] = useState('todas')
   const [busca, setBusca] = useState('')
   const [erro, setErro] = useState('')
-  const loaded = useRef(false)
+  const verAgendadas = user?.papel === 'admin' || user?.papel === 'gerente'
 
-  async function recarregar() {
-    const [t, c, s] = await Promise.all([listTarefas(), listClientes(), listServicos()])
+  async function recarregar(filtro = visao) {
+    const params = filtro === 'todas' ? undefined : { visao: filtro }
+    const t = await listTarefas(params)
     setTarefas(t.data || [])
-    setClientes(c.data || [])
-    setServicos(s.data || [])
   }
 
   useEffect(() => {
-    if (loaded.current) return
-    loaded.current = true
     recarregar().catch(() => {
       setErro('Não foi possível carregar a lista. Confira se a API está no ar.')
       showToast('Não foi possível carregar as tarefas. Suba a API em :8000.', 'erro')
     })
-  }, [])
+  }, [visao])
 
   async function abrir(tarefa) {
     try {
@@ -48,12 +42,6 @@ export default function ListaPage() {
   function onAtualizada(tarefa) {
     setAberta(tarefa)
     setTarefas((lista) => lista.map((item) => (item.id === tarefa.id ? { ...item, ...tarefa } : item)))
-  }
-
-  function onCriada(tarefa) {
-    setTarefas((lista) => [tarefa, ...lista])
-    setCriar(false)
-    setAberta(tarefa)
   }
 
   function onExcluida(id) {
@@ -72,10 +60,10 @@ export default function ListaPage() {
   return (
     <AppShell
       title="Lista de tarefas"
-      cta={temPermissao(user, 'criar_tarefas') ? { label: '+ Tarefa', onClick: () => setCriar(true) } : undefined}
+      cta={temPermissao(user, 'criar_tarefas') ? { label: '+ Tarefa', to: '/tarefas/nova' } : undefined}
     >
       {erro ? <p className="mb-3 font-semibold text-[#b42318]">{erro}</p> : null}
-      <div className="mb-3 flex items-center gap-3">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
         <input
           type="search"
           value={busca}
@@ -83,6 +71,25 @@ export default function ListaPage() {
           placeholder="Buscar por tarefa ou cliente"
           className="w-full max-w-sm rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
         />
+        {[
+          ['todas', 'Todas'],
+          ['atrasadas', 'Atrasadas'],
+          ...(verAgendadas ? [['agendadas', 'Agendadas']] : []),
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            data-testid={`lista-visao-${id}`}
+            onClick={() => setVisao(id)}
+            className={`rounded-full border px-3 py-1 text-xs font-extrabold ${
+              visao === id
+                ? 'border-[var(--orange)] bg-[var(--orange-soft)] text-[var(--orange)]'
+                : 'border-[var(--line)] text-[var(--moss)]'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
         <span className="text-xs font-bold text-[var(--muted)]">{filtradas.length} tarefa(s)</span>
       </div>
 
@@ -110,8 +117,11 @@ export default function ListaPage() {
                 <tr
                   key={tarefa.id}
                   data-testid={`lista-tarefa-${tarefa.id}`}
+                  data-atrasada={tarefa.atrasada ? 'sim' : 'nao'}
                   onClick={() => abrir(tarefa)}
-                  className="cursor-pointer border-b border-[var(--line)] last:border-0 hover:bg-[var(--moss-soft)]/40"
+                  className={`cursor-pointer border-b border-[var(--line)] last:border-0 hover:bg-[var(--moss-soft)]/40 ${
+                    tarefa.atrasada ? 'bg-[#b42318]/20' : ''
+                  }`}
                 >
                   <td className="px-4 py-3">
                     <strong className="text-[var(--ink)]">{tarefa.titulo}</strong>
@@ -137,14 +147,6 @@ export default function ListaPage() {
 
       {aberta ? (
         <TaskDrawer tarefa={aberta} onClose={() => setAberta(null)} onAtualizada={onAtualizada} onExcluida={onExcluida} />
-      ) : null}
-      {criar ? (
-        <CreateTaskModal
-          clientes={clientes}
-          servicos={servicos}
-          onClose={() => setCriar(false)}
-          onCriada={onCriada}
-        />
       ) : null}
     </AppShell>
   )

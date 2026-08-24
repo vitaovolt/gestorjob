@@ -6,16 +6,12 @@ import AcoesLista from '../components/ui/AcoesLista.jsx'
 import ConfirmarExcluir from '../components/ui/ConfirmarExcluir.jsx'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { formatarBRL, formatarMinutos, podeGerirCadastros } from '../utils/format'
-
-function recorrenciaLabel(recorrencia) {
-  if (!recorrencia?.frequencia) return null
-  return 'Ativa'
-}
+import { formatarBRL, formatarMinutos, podeGerirCadastros, temPermissao } from '../utils/format'
 
 export default function ServicosPage() {
   const { user } = useAuth()
   const podeGerir = podeGerirCadastros(user)
+  const verCusto = temPermissao(user, 'ver_financeiro')
   const { showToast } = useToast()
   const submittingRef = useRef(false)
   const [servicos, setServicos] = useState([])
@@ -58,11 +54,11 @@ export default function ServicosPage() {
     >
       {erro ? <p className="mb-3 font-semibold text-[#b42318]">{erro}</p> : null}
       <p className="mt-0 mb-3 text-sm text-[var(--muted)]">
-        Escopo, preço e template de recorrência.
+        Escopo e preço do catálogo.
         {podeGerir ? (
           <>
             {' '}
-            Use <strong>Editar</strong> ou <strong>Excluir</strong>.
+            Use <strong>Editar</strong> ou <strong>Excluir</strong>. Recorrência fica na criação da tarefa.
           </>
         ) : null}
       </p>
@@ -73,15 +69,15 @@ export default function ServicosPage() {
             <tr className="border-b border-[var(--line)] bg-[var(--moss-soft)]/50 text-xs font-extrabold tracking-wide uppercase text-[var(--muted)]">
               <th className="px-4 py-3">Serviço</th>
               <th className="px-4 py-3 text-right">Preço</th>
+              {verCusto ? <th className="px-4 py-3 text-right">Custo</th> : null}
               <th className="px-4 py-3">Estimativa</th>
-              <th className="px-4 py-3">Recorrência</th>
               {podeGerir ? <th className="px-4 py-3 text-right">Ações</th> : null}
             </tr>
           </thead>
           <tbody>
             {servicos.length === 0 ? (
               <tr>
-                <td colSpan={podeGerir ? 5 : 4} className="px-4 py-10 text-center text-[var(--muted)]">
+                <td colSpan={podeGerir ? (verCusto ? 5 : 4) : (verCusto ? 4 : 3)} className="px-4 py-10 text-center text-[var(--muted)]">
                   Nenhum serviço ainda.
                   {podeGerir ? ' Use + Serviço.' : null}
                 </td>
@@ -102,16 +98,10 @@ export default function ServicosPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-bold">{formatarBRL(servico.preco_venda)}</td>
+                  {verCusto ? (
+                    <td className="px-4 py-3 text-right text-[var(--muted)]">{formatarBRL(servico.custo_estimado)}</td>
+                  ) : null}
                   <td className="px-4 py-3 text-[var(--muted)]">{formatarMinutos(servico.tempo_estimado_minutos)}</td>
-                  <td className="px-4 py-3">
-                    {recorrenciaLabel(servico.recorrencia) ? (
-                      <span className="rounded-full bg-[var(--orange-soft)] px-2 py-0.5 text-xs font-bold text-[var(--orange)]">
-                        Ativa
-                      </span>
-                    ) : (
-                      <span className="text-[var(--muted)]">—</span>
-                    )}
-                  </td>
                   {podeGerir ? (
                     <td className="px-4 py-3 text-right">
                       <AcoesLista to={`/servicos/${servico.id}`} nome={servico.nome} onExcluir={() => setAlvo(servico)} />

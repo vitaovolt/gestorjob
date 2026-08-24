@@ -24,23 +24,22 @@ class MvpLacunasTest extends TestCase
         $cliente = Cliente::factory()->create(['empresa_id' => $empresa->id]);
         $servico = Servico::factory()->create([
             'empresa_id' => $empresa->id,
-            'recorrencia' => ['frequencia' => 'semanal', 'dias' => ['ter', 'qui'], 'prazo_d_menos' => 1],
         ]);
 
         Sanctum::actingAs($admin);
 
-        $r1 = $this->postJson('/api/v1/recorrencias', [
+        $r1 = $this->postJson('/api/v1/tarefas', [
             'cliente_id' => $cliente->id,
             'servico_id' => $servico->id,
             'titulo' => 'IG 3x — Educ',
-            'horizonte_semanas' => 2,
+            'repeticao' => ['frequencia' => 'semanal', 'dias' => ['ter', 'qui']],
         ])->assertCreated();
 
-        $criadas = (int) $r1->json('data.geracao.criadas');
+        $criadas = Tarefa::query()->where('titulo', 'IG 3x — Educ')->count();
         $this->assertGreaterThan(0, $criadas);
-        $this->assertDatabaseCount('tarefas', $criadas);
 
-        $serieId = $r1->json('data.recorrencia.id');
+        $serieId = Tarefa::query()->find($r1->json('data.id'))?->recorrencia_id;
+        $this->assertNotNull($serieId);
         $this->postJson("/api/v1/recorrencias/{$serieId}/gerar")
             ->assertOk()
             ->assertJsonPath('data.geracao.criadas', 0);
@@ -55,13 +54,14 @@ class MvpLacunasTest extends TestCase
         $cliente = Cliente::factory()->create(['empresa_id' => $empresa->id]);
         $servico = Servico::factory()->create([
             'empresa_id' => $empresa->id,
-            'recorrencia' => ['frequencia' => 'semanal', 'dias' => ['seg'], 'prazo_d_menos' => 0],
         ]);
         Recorrencia::factory()->create([
             'empresa_id' => $empresa->id,
             'cliente_id' => $cliente->id,
             'servico_id' => $servico->id,
             'titulo' => 'Post semanal',
+            'frequencia' => 'semanal',
+            'dias' => ['seg'],
             'horizonte_semanas' => 1,
         ]);
 

@@ -10,7 +10,7 @@ class AtualizarConfiguracao
 {
     /**
      * @param  array<string, mixed>  $dados
-     * @return array<string, bool>
+     * @return array<string, mixed>
      */
     public function handle(Empresa $empresa, User $user, array $dados): array
     {
@@ -21,7 +21,7 @@ class AtualizarConfiguracao
             if (! in_array($chave, $permitidas, true) || ! in_array($chave, ConfiguracaoTenant::chaves(), true)) {
                 continue;
             }
-            $atual[$chave] = (bool) $valor;
+            $atual[$chave] = ConfiguracaoTenant::normalizar($chave, $valor, ConfiguracaoTenant::PADRAO[$chave]);
         }
 
         $empresa->update(['configuracao' => $atual]);

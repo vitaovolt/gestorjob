@@ -85,6 +85,11 @@ class User extends Authenticatable
         return false;
     }
 
+    public function podeAlocarResponsaveis(): bool
+    {
+        return in_array($this->papel, ['admin', 'gerente'], true);
+    }
+
     public function podeExcluirTarefas(): bool
     {
         if ($this->papel === 'admin') {
@@ -179,6 +184,7 @@ class User extends Authenticatable
         return [
             'criar_tarefas' => $this->podeCriarTarefas(),
             'excluir_tarefas' => $this->podeExcluirTarefas(),
+            'alocar_responsaveis' => $this->podeAlocarResponsaveis(),
             'cadastrar_equipe' => $this->podeCriarUsuarios(),
             'gerir_cadastros' => $this->podeGerirCadastros(),
             'operar_tarefas' => $this->podeOperarTarefas(),
@@ -188,6 +194,7 @@ class User extends Authenticatable
             'anexar' => $this->podeAnexarArquivos(),
             'ver_financeiro' => $this->podeVerFinanceiro(),
             'comentar' => $this->podeOperarTarefas(),
+            'timer_ao_abrir' => (bool) $this->empresa?->config('timer_ao_abrir'),
         ];
     }
 

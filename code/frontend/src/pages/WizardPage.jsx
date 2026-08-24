@@ -30,7 +30,6 @@ export default function WizardPage() {
   const [servico, setServico] = useState({
     nome: 'Post feed Instagram',
     preco_venda: maskMoneyBR('280'),
-    checklist_texto: 'Briefing\nArte\nCopy\nRevisão\nAgendar',
   })
   const [equipe, setEquipe] = useState({
     name: '',
@@ -58,10 +57,6 @@ export default function WizardPage() {
       await createServico({
         nome: servico.nome.trim(),
         preco_venda: parseMoneyBR(servico.preco_venda),
-        checklist_padrao: servico.checklist_texto
-          .split('\n')
-          .map((l) => l.trim())
-          .filter(Boolean),
       })
       showToast('Serviço cadastrado')
       return true
@@ -198,15 +193,6 @@ export default function WizardPage() {
                 value={servico.preco_venda}
                 onChange={(e) => setServico({ ...servico, preco_venda: maskMoneyBR(e.target.value) })}
                 data-testid="wizard-servico-preco"
-              />
-            </label>
-            <label className="block text-sm font-bold text-[var(--moss)] sm:col-span-2">
-              Checklist padrão (uma linha por item)
-              <textarea
-                className={`${campo} min-h-[100px]`}
-                value={servico.checklist_texto}
-                onChange={(e) => setServico({ ...servico, checklist_texto: e.target.value })}
-                data-testid="wizard-servico-checklist"
               />
             </label>
           </div>

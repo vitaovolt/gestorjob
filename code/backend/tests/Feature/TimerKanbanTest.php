@@ -138,6 +138,7 @@ class TimerKanbanTest extends TestCase
             'cliente_id' => $tarefa->cliente_id,
             'servico_id' => $tarefa->servico_id,
             'titulo' => 'Com checklist',
+            'checklist' => ['Briefing'],
         ]);
         $nova = Tarefa::query()->where('titulo', 'Com checklist')->first();
         $item = $nova->checklistItens()->first();

@@ -22,7 +22,10 @@ class RecorrenciaFactory extends Factory
             'cliente_id' => Cliente::factory(),
             'servico_id' => Servico::factory(),
             'titulo' => 'IG 3x — Cliente',
+            'frequencia' => 'semanal',
+            'dias' => ['ter', 'qui'],
             'responsavel_id' => null,
+            'responsavel_ids' => [],
             'horizonte_semanas' => 4,
             'ativa' => true,
         ];

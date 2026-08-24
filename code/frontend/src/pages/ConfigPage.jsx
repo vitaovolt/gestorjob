@@ -13,7 +13,19 @@ const VAZIO = {
   notif_in_app: true,
   digest_diario: false,
   colaborador_so_alocadas: true,
+  expediente_dias: ['seg', 'ter', 'qua', 'qui', 'sex'],
+  expediente_hora_fim: '18:00',
 }
+
+const DIAS_EXP = [
+  ['seg', 'Seg'],
+  ['ter', 'Ter'],
+  ['qua', 'Qua'],
+  ['qui', 'Qui'],
+  ['sex', 'Sex'],
+  ['sab', 'Sáb'],
+  ['dom', 'Dom'],
+]
 
 function Check({ id, label, hint, checked, disabled, onChange }) {
   return (
@@ -134,11 +146,58 @@ export default function ConfigPage() {
               <Check
                 id="timer_ao_abrir"
                 label="Iniciar timer ao abrir o card"
-                hint="Guardado agora; o play do timer continua manual neste ciclo."
+                hint="Abre o cronômetro na fase atual (ou Produção). Play retoma depois de pausar."
                 checked={form.timer_ao_abrir}
                 disabled={!pode('timer_ao_abrir')}
                 onChange={setFlag}
               />
+            </div>
+          </section>
+
+          <section className={card}>
+            <h2 className={head}>Expediente</h2>
+            <div className={body}>
+              <p className="m-0 text-xs text-[var(--muted)]">Dias e hora em que o prazo da tarefa fecha. A repetição diária usa estes dias.</p>
+              <div className="flex flex-wrap gap-2">
+                {DIAS_EXP.map(([valor, label]) => (
+                  <label
+                    key={valor}
+                    className={`cursor-pointer rounded-full border px-3 py-1 text-sm font-bold ${
+                      (form.expediente_dias || []).includes(valor)
+                        ? 'border-[var(--orange)] bg-[var(--orange-soft)] text-[var(--orange)]'
+                        : 'border-[var(--line)] text-[var(--moss)]'
+                    } ${!pode('expediente_dias') ? 'opacity-60' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      data-testid={`config-expediente-${valor}`}
+                      disabled={!pode('expediente_dias')}
+                      checked={(form.expediente_dias || []).includes(valor)}
+                      onChange={() => {
+                        const atual = form.expediente_dias || []
+                        const proximo = atual.includes(valor)
+                          ? atual.filter((d) => d !== valor)
+                          : [...atual, valor]
+                        if (proximo.length === 0) return
+                        setFlag('expediente_dias', proximo)
+                      }}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <label className="block text-sm font-bold text-[var(--ink)]">
+                Fecha às
+                <input
+                  type="time"
+                  data-testid="config-expediente-hora"
+                  disabled={!pode('expediente_hora_fim')}
+                  value={form.expediente_hora_fim || '18:00'}
+                  onChange={(e) => setFlag('expediente_hora_fim', e.target.value)}
+                  className="mt-1 rounded-lg border border-[var(--line)] px-3 py-2"
+                />
+              </label>
             </div>
           </section>
 
@@ -156,7 +215,7 @@ export default function ConfigPage() {
               <Check
                 id="notif_in_app"
                 label="Avisos no sistema"
-                hint="Sino no topo: alocação, mudança de status e prazo hoje."
+                hint="Sino no topo: alocação, anexo, atraso, entrega e partes do checklist."
                 checked={form.notif_in_app}
                 disabled={!pode('notif_in_app')}
                 onChange={setFlag}

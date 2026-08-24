@@ -24,12 +24,6 @@ class StoreServicoRequest extends FormRequest
             'preco_venda' => ['nullable', 'numeric', 'min:0'],
             'custo_estimado' => ['nullable', 'numeric', 'min:0'],
             'tempo_estimado_minutos' => ['nullable', 'integer', 'min:0'],
-            'checklist_padrao' => ['nullable', 'array'],
-            'checklist_padrao.*' => ['string', 'max:255'],
-            'recorrencia' => ['nullable', 'array'],
-            'recorrencia.frequencia' => ['nullable', 'string', 'max:32'],
-            'recorrencia.dias' => ['nullable', 'array'],
-            'recorrencia.prazo_d_menos' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

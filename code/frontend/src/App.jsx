@@ -25,6 +25,7 @@ import RedefinirSenhaPage from './pages/RedefinirSenhaPage.jsx'
 import ServicoFormPage from './pages/ServicoFormPage.jsx'
 import ServicosPage from './pages/ServicosPage.jsx'
 import WizardPage from './pages/WizardPage.jsx'
+import NovaTarefaPage from './pages/NovaTarefaPage.jsx'
 
 function Privado({ children, permitirWizard = false }) {
   return <ProtectedRoute permitirWizard={permitirWizard}>{children}</ProtectedRoute>
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
             <Route path="/wizard" element={<Privado permitirWizard><WizardPage /></Privado>} />
             <Route path="/" element={<Privado><Inicio /></Privado>} />
+            <Route path="/tarefas/nova" element={<Privado><NovaTarefaPage /></Privado>} />
             <Route path="/perfil" element={<Privado><PerfilPage /></Privado>} />
             <Route path="/lista" element={<Privado><ListaPage /></Privado>} />
             <Route path="/clientes" element={<Privado><ClientesPage /></Privado>} />

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\AnexarArquivoTarefa;
 use App\Actions\ExcluirAnexo;
+use App\Actions\NotificarResponsaveisTarefa;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAnexoRequest;
+use App\Models\Notificacao;
 use App\Models\Tarefa;
 use App\Models\TarefaAnexo;
 use App\Support\ApiResponse;
@@ -18,10 +20,18 @@ class AnexoController extends Controller
 {
     use ApiResponse;
 
-    public function store(StoreAnexoRequest $request, Tarefa $tarefa, AnexarArquivoTarefa $anexar): JsonResponse
+    public function store(StoreAnexoRequest $request, Tarefa $tarefa, AnexarArquivoTarefa $anexar, NotificarResponsaveisTarefa $notificar): JsonResponse
     {
         $this->garantirVisivel($request, $tarefa);
-        $anexar->handle($tarefa, $request->user(), $request->file('arquivo'));
+        $anexo = $anexar->handle($tarefa, $request->user(), $request->file('arquivo'));
+        $notificar->handle(
+            $tarefa->fresh(['responsaveis']),
+            Notificacao::TIPO_ANEXO,
+            'Novo anexo: '.$anexo->nome_original,
+            $tarefa->titulo,
+            null,
+            $request->user()?->id,
+        );
         $user = $request->user();
         $tarefa->refresh()->load(['anexos.user'])->carregarParaApi(
             $user?->id,
