@@ -11,6 +11,26 @@ export function formatarBRL(valor) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+export function formatarHoras(valor) {
+  const n = Number(valor)
+  if (!Number.isFinite(n)) return '—'
+  return `${n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}h`
+}
+
+export function competenciaAtual() {
+  const data = new Date()
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function rotuloCompetencia(competencia) {
+  if (!competencia) return '—'
+  const [ano, mes] = String(competencia).split('-')
+  const data = new Date(Number(ano), Number(mes) - 1, 1)
+  if (Number.isNaN(data.getTime())) return competencia
+  const label = data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+  return label.replace('.', '')
+}
+
 export function podeCadastrarClientes(user) {
   return user?.permissoes?.gerir_cadastros === true
     || user?.papel === 'admin'

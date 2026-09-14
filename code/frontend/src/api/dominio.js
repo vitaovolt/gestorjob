@@ -115,3 +115,7 @@ export const updateEmpresa = (id, payload) => client.put(`/empresas/${id}`, payl
 export const reenviarConvite = (id) => client.post(`/empresas/${id}/convite`).then((r) => r.data)
 export const getMargem = (competencia) =>
   client.get('/relatorios/margem', { params: { competencia } }).then((r) => r.data)
+export const getAtrasos = () => client.get('/relatorios/atrasos').then((r) => r.data)
+export const getHoras = (competencia) =>
+  client.get('/relatorios/horas', { params: { competencia } }).then((r) => r.data)
+export const getCarga = () => client.get('/relatorios/carga').then((r) => r.data)

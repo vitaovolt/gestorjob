@@ -897,3 +897,37 @@ paths:
         '200': { description: Linhas por cliente ativo }
         '401': { description: Sem token }
         '403': { description: Papel sem financeiro (colaborador/visualizador) }
+  /relatorios/atrasos:
+    get:
+      operationId: getAtrasos
+      tags: [Relatorios]
+      summary: Tarefas atrasadas e SLA de prazo
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Totais (no prazo, atrasadas, SLA) e lista de atrasadas }
+        '401': { description: Sem token }
+        '403': { description: Papel sem financeiro (colaborador/visualizador) }
+  /relatorios/horas:
+    get:
+      operationId: getHoras
+      tags: [Relatorios]
+      summary: Horas apontadas por colaborador, cliente e fase
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: query
+          name: competencia
+          schema: { type: string, example: '2026-08' }
+      responses:
+        '200': { description: Linhas agrupadas e estimado vs real por cliente/serviço }
+        '401': { description: Sem token }
+        '403': { description: Papel sem financeiro (colaborador/visualizador) }
+  /relatorios/carga:
+    get:
+      operationId: getCarga
+      tags: [Relatorios]
+      summary: Carga da semana versus capacidade semanal
+      security: [{ sanctum: [] }]
+      responses:
+        '200': { description: Percentual por colaborador e média da equipe }
+        '401': { description: Sem token }
+        '403': { description: Papel sem financeiro (colaborador/visualizador) }

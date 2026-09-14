@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/layout/ProtectedRoute.jsx'
 import SuperAdminRoute from './components/layout/SuperAdminRoute.jsx'
 import ConfigRoute from './components/layout/ConfigRoute.jsx'
+import FinanceiroRoute from './components/layout/FinanceiroRoute.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { ehSuperAdmin } from './utils/format'
@@ -10,6 +11,7 @@ import ClientesPage from './pages/ClientesPage.jsx'
 import ColaboradorFormPage from './pages/ColaboradorFormPage.jsx'
 import ColaboradoresPage from './pages/ColaboradoresPage.jsx'
 import ConfigPage from './pages/ConfigPage.jsx'
+import DashboardPage from './pages/DashboardPage.jsx'
 import ConvitePage from './pages/ConvitePage.jsx'
 import EmpresaDetalhePage from './pages/EmpresaDetalhePage.jsx'
 import EmpresaFormPage from './pages/EmpresaFormPage.jsx'
@@ -22,6 +24,10 @@ import PermissoesPage from './pages/PermissoesPage.jsx'
 import RecuperarSenhaOkPage from './pages/RecuperarSenhaOkPage.jsx'
 import RecuperarSenhaPage from './pages/RecuperarSenhaPage.jsx'
 import RedefinirSenhaPage from './pages/RedefinirSenhaPage.jsx'
+import RelatorioAtrasosPage from './pages/RelatorioAtrasosPage.jsx'
+import RelatorioCargaPage from './pages/RelatorioCargaPage.jsx'
+import RelatorioHorasPage from './pages/RelatorioHorasPage.jsx'
+import RelatorioMargemPage from './pages/RelatorioMargemPage.jsx'
 import ServicoFormPage from './pages/ServicoFormPage.jsx'
 import ServicosPage from './pages/ServicosPage.jsx'
 import WizardPage from './pages/WizardPage.jsx'
@@ -64,6 +70,11 @@ export default function App() {
             <Route path="/colaboradores" element={<Privado><ColaboradoresPage /></Privado>} />
             <Route path="/colaboradores/novo" element={<Privado><ColaboradorFormPage /></Privado>} />
             <Route path="/colaboradores/:id" element={<Privado><ColaboradorFormPage /></Privado>} />
+            <Route path="/dashboard" element={<FinanceiroRoute><DashboardPage /></FinanceiroRoute>} />
+            <Route path="/relatorios/margem" element={<FinanceiroRoute><RelatorioMargemPage /></FinanceiroRoute>} />
+            <Route path="/relatorios/atrasos" element={<FinanceiroRoute><RelatorioAtrasosPage /></FinanceiroRoute>} />
+            <Route path="/relatorios/horas" element={<FinanceiroRoute><RelatorioHorasPage /></FinanceiroRoute>} />
+            <Route path="/relatorios/carga" element={<FinanceiroRoute><RelatorioCargaPage /></FinanceiroRoute>} />
             <Route path="/config" element={<ConfigRoute><ConfigPage /></ConfigRoute>} />
             <Route path="/permissoes" element={<ConfigRoute><PermissoesPage /></ConfigRoute>} />
             <Route path="/empresas" element={<SuperAdminRoute><EmpresasPage /></SuperAdminRoute>} />

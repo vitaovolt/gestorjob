@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { ehSuperAdmin } from '../../utils/format'
+import { ehSuperAdmin, temPermissao } from '../../utils/format'
 import LogoGestorJob from '../brand/LogoGestorJob.jsx'
 import NotificacoesBell from './NotificacoesBell.jsx'
 
@@ -17,6 +17,15 @@ function toggleClass({ isActive }) {
   }`
 }
 
+function NavSec({ label, children }) {
+  return (
+    <div className="mt-4 first:mt-0">
+      <p className="px-3 pb-1 text-[10px] font-extrabold tracking-wider uppercase text-white/45">{label}</p>
+      <div className="flex flex-col gap-1">{children}</div>
+    </div>
+  )
+}
+
 export default function AppShell({ title, cta, children }) {
   const { user, logout } = useAuth()
   const location = useLocation()
@@ -27,6 +36,7 @@ export default function AppShell({ title, cta, children }) {
   const superAdmin = ehSuperAdmin(user)
   const visaoTarefas = !superAdmin && (location.pathname === '/' || location.pathname === '/lista' || location.pathname.startsWith('/tarefas'))
   const verConfig = Boolean(user?.permissoes?.ver_config)
+  const verFinanceiro = temPermissao(user, 'ver_financeiro')
 
   useEffect(() => {
     if (!menuAberto) return undefined
@@ -61,41 +71,64 @@ export default function AppShell({ title, cta, children }) {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="flex w-[220px] shrink-0 flex-col bg-[var(--moss)] px-3 py-4 text-white">
+      <aside className="flex w-[220px] shrink-0 flex-col overflow-hidden bg-[var(--moss)] px-3 py-4 text-white">
         <div className="px-1">
           <LogoGestorJob variante="escuro" className="h-11 w-auto max-w-full" />
         </div>
-        <nav aria-label="Principal" className="mt-6 flex flex-col gap-1">
+        <nav aria-label="Principal" className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto">
           {superAdmin ? (
             <NavLink to="/empresas" className={navClass}>
               Empresas
             </NavLink>
           ) : (
             <>
-              <NavLink to="/" end className={navClass}>
-                Kanban
-              </NavLink>
-              <NavLink to="/lista" className={navClass}>
-                Lista
-              </NavLink>
-              <NavLink to="/clientes" className={navClass}>
-                Clientes / Fornecedores
-              </NavLink>
-              <NavLink to="/servicos" className={navClass}>
-                Serviços
-              </NavLink>
-              <NavLink to="/colaboradores" className={navClass}>
-                Colaboradores
-              </NavLink>
+              <NavSec label="Operação">
+                <NavLink to="/" end className={navClass}>
+                  Kanban
+                </NavLink>
+                <NavLink to="/lista" className={navClass}>
+                  Lista
+                </NavLink>
+              </NavSec>
+              <NavSec label="Cadastros">
+                <NavLink to="/clientes" className={navClass}>
+                  Clientes / Fornecedores
+                </NavLink>
+                <NavLink to="/servicos" className={navClass}>
+                  Serviços
+                </NavLink>
+                <NavLink to="/colaboradores" className={navClass}>
+                  Colaboradores
+                </NavLink>
+              </NavSec>
+              {verFinanceiro ? (
+                <NavSec label="Inteligência">
+                  <NavLink to="/dashboard" className={navClass}>
+                    Dashboard
+                  </NavLink>
+                  <NavLink to="/relatorios/margem" className={navClass}>
+                    Margem
+                  </NavLink>
+                  <NavLink to="/relatorios/atrasos" className={navClass}>
+                    Atrasos
+                  </NavLink>
+                  <NavLink to="/relatorios/horas" className={navClass}>
+                    Horas
+                  </NavLink>
+                  <NavLink to="/relatorios/carga" className={navClass}>
+                    Carga
+                  </NavLink>
+                </NavSec>
+              ) : null}
               {verConfig ? (
-                <>
+                <NavSec label="Config">
                   <NavLink to="/permissoes" className={navClass}>
                     Permissões
                   </NavLink>
                   <NavLink to="/config" className={navClass}>
                     Configurações
                   </NavLink>
-                </>
+                </NavSec>
               ) : null}
             </>
           )}
