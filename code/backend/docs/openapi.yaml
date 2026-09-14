@@ -420,6 +420,21 @@ paths:
         '200': { description: linhas + células }
         '401': { description: Sem token }
         '403': { description: Sem acesso }
+  /cep/{cep}:
+    get:
+      operationId: consultarCep
+      tags: [Clientes]
+      summary: Consulta ViaCEP (timeout no backend)
+      security: [{ sanctum: [] }]
+      parameters:
+        - in: path
+          name: cep
+          required: true
+          schema: { type: string, pattern: '^[0-9]{8}$' }
+      responses:
+        '200': { description: Endereço normalizado }
+        '404': { description: CEP não encontrado }
+        '401': { description: Sem token }
   /clientes:
     get:
       operationId: listClientes
@@ -443,7 +458,20 @@ paths:
               required: [nome_fantasia]
               properties:
                 nome_fantasia: { type: string }
-                cnpj: { type: string, description: 'CNPJ 14 posições, numérico ou alfanumérico (IN 2.229)' }
+                eh_cliente: { type: boolean, default: true }
+                eh_fornecedor: { type: boolean, default: false }
+                tipo_pessoa: { type: string, enum: [pf, pj] }
+                cnpj: { type: string, description: 'CPF (11) ou CNPJ (14, alfanumérico IN 2.229)' }
+                cep: { type: string }
+                logradouro: { type: string }
+                numero: { type: string }
+                complemento: { type: string }
+                bairro: { type: string }
+                cidade: { type: string }
+                uf: { type: string }
+                inscricao_municipal: { type: string }
+                inscricao_estadual: { type: string }
+                telefone: { type: string }
                 fee_mensal: { type: number }
                 status: { type: string }
       responses:

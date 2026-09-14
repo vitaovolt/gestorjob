@@ -15,15 +15,30 @@ class Cliente extends Model
 
     protected $fillable = [
         'empresa_id',
+        'eh_cliente',
+        'eh_fornecedor',
+        'tipo_pessoa',
         'nome_fantasia',
         'razao_social',
         'cnpj',
+        'inscricao_municipal',
+        'inscricao_estadual',
         'segmento',
         'status',
         'contato_nome',
         'email',
         'whatsapp',
+        'telefone',
+        'cep',
+        'logradouro',
+        'numero',
+        'complemento',
+        'bairro',
+        'cidade',
+        'uf',
         'inicio_parceria',
+        'data_nascimento',
+        'data_aniversario',
         'pasta_drive_url',
         'dia_vencimento',
         'fee_mensal',
@@ -34,7 +49,11 @@ class Cliente extends Model
     protected function casts(): array
     {
         return [
+            'eh_cliente' => 'boolean',
+            'eh_fornecedor' => 'boolean',
             'inicio_parceria' => 'date',
+            'data_nascimento' => 'date',
+            'data_aniversario' => 'date',
             'dia_vencimento' => 'integer',
             'fee_mensal' => 'decimal:2',
         ];
@@ -45,6 +64,16 @@ class Cliente extends Model
         return $query->where('status', 'ativo');
     }
 
+    public function scopeSomenteClientes($query)
+    {
+        return $query->where('eh_cliente', true);
+    }
+
+    public function scopeSomenteFornecedores($query)
+    {
+        return $query->where('eh_fornecedor', true);
+    }
+
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
@@ -53,5 +82,17 @@ class Cliente extends Model
     public function tarefas(): HasMany
     {
         return $this->hasMany(Tarefa::class);
+    }
+
+    public function rotuloPapel(): string
+    {
+        if ($this->eh_cliente && $this->eh_fornecedor) {
+            return 'Cliente e fornecedor';
+        }
+        if ($this->eh_fornecedor) {
+            return 'Fornecedor';
+        }
+
+        return 'Cliente';
     }
 }

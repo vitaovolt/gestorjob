@@ -104,3 +104,26 @@ export function emailValido(valor) {
 export function normalizeEmail(value) {
   return String(value ?? '').trim().toLowerCase()
 }
+
+export function maskCep(raw) {
+  const d = onlyDigits(raw, 8)
+  if (d.length <= 5) return d
+  return `${d.slice(0, 5)}-${d.slice(5)}`
+}
+
+export function maskUf(raw) {
+  return String(raw || '')
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .slice(0, 2)
+}
+
+export function maskCpfOuCnpj(raw, tipoPessoa = 'pj') {
+  return tipoPessoa === 'pf' ? maskCpf(raw) : maskCnpj(raw)
+}
+
+export function normalizarDocumento(valor) {
+  return String(valor || '')
+    .toUpperCase()
+    .replace(/[^0-9A-Z]/g, '')
+}

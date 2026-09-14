@@ -423,6 +423,101 @@ class DominioApiTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $admin->id]);
     }
 
+    public function test_cliente_pode_ser_tambem_fornecedor_com_endereco(): void
+    {
+        $admin = $this->adminDaAgencia();
+
+        $this->postJson('/api/v1/clientes', [
+            'nome_fantasia' => 'Baldan',
+            'eh_cliente' => true,
+            'eh_fornecedor' => true,
+            'tipo_pessoa' => 'pj',
+            'cnpj' => '11222333000181',
+            'telefone' => '1632519800',
+            'cep' => '14847-042',
+            'logradouro' => 'Rodovia José Corona',
+            'numero' => 'S/N',
+            'bairro' => 'Distrito Industrial',
+            'cidade' => 'Jaboticabal',
+            'uf' => 'sp',
+            'inscricao_estadual' => 'ISENTA',
+            'data_nascimento' => '1990-01-15',
+        ])->assertCreated()
+            ->assertJsonPath('data.eh_fornecedor', true)
+            ->assertJsonPath('data.cidade', 'Jaboticabal')
+            ->assertJsonPath('data.uf', 'SP')
+            ->assertJsonPath('data.cep', '14847042');
+
+        $this->assertDatabaseHas('clientes', [
+            'empresa_id' => $admin->empresa_id,
+            'nome_fantasia' => 'Baldan',
+            'eh_cliente' => true,
+            'eh_fornecedor' => true,
+            'cidade' => 'Jaboticabal',
+            'uf' => 'SP',
+        ]);
+        $this->assertDatabaseHas('logs_acoes', [
+            'acao' => 'cliente.criar',
+            'user_id' => $admin->id,
+        ]);
+    }
+
+    public function test_rejeita_cadastro_sem_papel_e_aceita_cpf(): void
+    {
+        $this->adminDaAgencia();
+
+        $this->postJson('/api/v1/clientes', [
+            'nome_fantasia' => 'Sem papel',
+            'eh_cliente' => false,
+            'eh_fornecedor' => false,
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['eh_cliente']);
+
+        $this->postJson('/api/v1/clientes', [
+            'nome_fantasia' => 'Pessoa Física',
+            'tipo_pessoa' => 'pf',
+            'eh_cliente' => false,
+            'eh_fornecedor' => true,
+            'cnpj' => '529.982.247-25',
+        ])->assertCreated()
+            ->assertJsonPath('data.eh_fornecedor', true)
+            ->assertJsonPath('data.eh_cliente', false)
+            ->assertJsonPath('data.cnpj', '52998224725');
+
+        $this->assertDatabaseHas('clientes', [
+            'nome_fantasia' => 'Pessoa Física',
+            'cnpj' => '52998224725',
+            'eh_fornecedor' => true,
+            'eh_cliente' => false,
+        ]);
+    }
+
+    public function test_lista_filtra_papel_e_tarefa_nao_aceita_so_fornecedor(): void
+    {
+        $admin = $this->adminDaAgencia();
+        $fornecedor = Cliente::factory()->create([
+            'empresa_id' => $admin->empresa_id,
+            'nome_fantasia' => 'Só Fornecedor',
+            'eh_cliente' => false,
+            'eh_fornecedor' => true,
+        ]);
+        Cliente::factory()->create([
+            'empresa_id' => $admin->empresa_id,
+            'nome_fantasia' => 'Só Cliente',
+            'eh_cliente' => true,
+            'eh_fornecedor' => false,
+        ]);
+
+        $fornecedores = $this->getJson('/api/v1/clientes?papel=fornecedor')->assertOk();
+        $this->assertSame(['Só Fornecedor'], collect($fornecedores->json('data'))->pluck('nome_fantasia')->all());
+
+        $this->postJson('/api/v1/tarefas', [
+            'cliente_id' => $fornecedor->id,
+            'titulo' => 'Não deve criar',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['cliente_id']);
+    }
+
     private function adminDaAgencia(): User
     {
         $empresa = Empresa::factory()->pro()->create(['nome' => 'Agência Teste']);

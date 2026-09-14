@@ -21,7 +21,11 @@ class StoreRecorrenciaRequest extends FormRequest
         $empresaId = $this->user()?->empresa_id;
 
         return [
-            'cliente_id' => ['required', 'integer', Rule::exists('clientes', 'id')->where('empresa_id', $empresaId)],
+            'cliente_id' => [
+                'required',
+                'integer',
+                Rule::exists('clientes', 'id')->where('empresa_id', $empresaId)->where('eh_cliente', true),
+            ],
             'servico_id' => ['nullable', 'integer', Rule::exists('servicos', 'id')->where('empresa_id', $empresaId)],
             'titulo' => ['required', 'string', 'max:180'],
             'frequencia' => ['required', 'string', Rule::in(['diaria', 'semanal'])],

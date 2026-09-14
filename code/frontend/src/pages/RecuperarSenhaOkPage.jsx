@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import LogoGestorJob from '../components/brand/LogoGestorJob.jsx'
 
 export default function RecuperarSenhaOkPage() {
   const location = useLocation()
@@ -6,9 +7,7 @@ export default function RecuperarSenhaOkPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12 text-center">
-      <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-[var(--moss)]">
-        Gestor<span className="text-[var(--orange)]">Job</span>
-      </h1>
+      <LogoGestorJob className="mx-auto h-16 w-auto max-w-[280px]" />
       <div
         className="mt-8 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_rgba(26,34,32,0.08)]"
         data-testid="recuperar-ok"

@@ -15,6 +15,9 @@ class ClienteFactory extends Factory
     {
         return [
             'empresa_id' => Empresa::factory(),
+            'eh_cliente' => true,
+            'eh_fornecedor' => false,
+            'tipo_pessoa' => 'pj',
             'nome_fantasia' => fake()->company(),
             'razao_social' => fake()->company().' LTDA',
             'cnpj' => fake()->unique()->numerify('##############'),

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { aceitarConvite, previewConvite } from '../api/auth'
+import LogoGestorJob from '../components/brand/LogoGestorJob.jsx'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 
@@ -76,9 +77,7 @@ export default function ConvitePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
-      <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-[var(--moss)]">
-        Gestor<span className="text-[var(--orange)]">Job</span>
-      </h1>
+      <LogoGestorJob className="h-16 w-auto max-w-[280px]" />
       <p className="mt-2 text-[var(--muted)]">
         {preview?.empresa ? `Convite para ${preview.empresa}` : 'Ativar conta'}
       </p>

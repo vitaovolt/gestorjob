@@ -27,6 +27,9 @@ class BootstrapSchemaTest extends TestCase
         $this->assertTrue(Schema::hasTable('apontamentos'));
         $this->assertTrue(Schema::hasTable('tarefa_anexos'));
         $this->assertTrue(Schema::hasTable('notificacoes'));
+        $this->assertTrue(Schema::hasTable('logs_acoes'));
+        $this->assertTrue(Schema::hasColumn('clientes', 'eh_fornecedor'));
+        $this->assertTrue(Schema::hasColumn('clientes', 'cep'));
         $this->assertTrue(Schema::hasColumn('users', 'empresa_id'));
         $this->assertTrue(Schema::hasColumn('users', 'papel'));
         $this->assertTrue(Schema::hasColumn('users', 'custo_hora'));

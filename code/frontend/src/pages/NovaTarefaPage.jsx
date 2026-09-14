@@ -64,7 +64,7 @@ export default function NovaTarefaPage() {
   })
 
   useEffect(() => {
-    Promise.all([listClientes(), listServicos(), listColaboradores()])
+    Promise.all([listClientes({ papel: 'cliente' }), listServicos(), listColaboradores()])
       .then(([c, s, col]) => {
         setClientes(c.data || [])
         setServicos(s.data || [])

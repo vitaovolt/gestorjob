@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchHealth } from '../api/health'
+import LogoGestorJob from '../components/brand/LogoGestorJob.jsx'
 
 export default function BootstrapPage() {
   const [health, setHealth] = useState(null)
@@ -21,12 +22,7 @@ export default function BootstrapPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-5 py-12">
-      <p className="m-0 text-xs font-extrabold tracking-[0.14em] uppercase text-[var(--moss)]">
-        Organize · Descomplique
-      </p>
-      <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-[var(--moss)]">
-        Gestor<span className="text-[var(--orange)]">Job</span>
-      </h1>
+      <LogoGestorJob className="h-16 w-auto max-w-[280px]" />
       <p className="mt-2 text-[var(--muted)]">
         Bootstrap F0 — API Laravel + SPA React. Login e Kanban entram nas próximas fases.
       </p>

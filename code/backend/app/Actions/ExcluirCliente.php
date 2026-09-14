@@ -12,7 +12,7 @@ class ExcluirCliente
         if ($cliente->tarefas()->exists()) {
             throw new HttpException(
                 409,
-                'Não dá para excluir: este cliente tem tarefas. Mova ou conclua as tarefas antes.',
+                'Não dá para excluir: este cadastro tem tarefas. Mova ou conclua as tarefas antes.',
             );
         }
 

@@ -7,7 +7,8 @@ export const marcarNotificacaoLida = (id) =>
 export const marcarTodasNotificacoesLidas = () =>
   client.post('/notificacoes/ler-todas').then((r) => r.data)
 
-export const listClientes = () => client.get('/clientes').then((r) => r.data)
+export const listClientes = (params) => client.get('/clientes', { params }).then((r) => r.data)
+export const consultarCep = (cep) => client.get(`/cep/${cep}`).then((r) => r.data)
 export const getCliente = (id) => client.get(`/clientes/${id}`).then((r) => r.data)
 export const createCliente = (payload) => client.post('/clientes', payload).then((r) => r.data)
 export const updateCliente = (id, payload) => client.put(`/clientes/${id}`, payload).then((r) => r.data)

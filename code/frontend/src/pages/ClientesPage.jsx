@@ -14,36 +14,43 @@ const STATUS_LABEL = {
   prospect: 'Prospect',
 }
 
+function rotuloPapel(item) {
+  if (item.eh_cliente && item.eh_fornecedor) return 'Cliente e fornecedor'
+  if (item.eh_fornecedor) return 'Fornecedor'
+  return 'Cliente'
+}
+
 export default function ClientesPage() {
   const { user } = useAuth()
   const podeGerir = podeGerirCadastros(user)
   const { showToast } = useToast()
   const submittingRef = useRef(false)
   const [clientes, setClientes] = useState([])
+  const [papel, setPapel] = useState('')
   const [erro, setErro] = useState('')
   const [alvo, setAlvo] = useState(null)
   const [excluindo, setExcluindo] = useState(false)
 
   useEffect(() => {
-    listClientes()
+    listClientes(papel ? { papel } : undefined)
       .then((payload) => setClientes(payload.data || []))
       .catch(() => {
-        setErro('Não foi possível carregar os clientes.')
-        showToast('Não foi possível carregar os clientes. Suba a API em :8000.', 'erro')
+        setErro('Não foi possível carregar os cadastros.')
+        showToast('Não foi possível carregar os cadastros. Suba a API em :8000.', 'erro')
       })
-  }, [])
+  }, [papel, showToast])
 
   async function onExcluir() {
     if (submittingRef.current || !alvo) return
     submittingRef.current = true
     setExcluindo(true)
     try {
-      await deleteCliente(alvo.id)
+      const resp = await deleteCliente(alvo.id)
       setClientes((lista) => lista.filter((c) => c.id !== alvo.id))
-      showToast('Cliente removido')
+      showToast(resp.message || 'Cliente removido')
       setAlvo(null)
     } catch (err) {
-      const msg = err.response?.data?.message || 'Não foi possível excluir o cliente.'
+      const msg = err.response?.data?.message || 'Não foi possível excluir o cadastro.'
       showToast(msg, 'erro')
       setAlvo(null)
     } finally {
@@ -52,14 +59,21 @@ export default function ClientesPage() {
     }
   }
 
+  const filtroClass = (valor) =>
+    `rounded-lg border px-3 py-1.5 text-xs font-extrabold ${
+      papel === valor
+        ? 'border-[var(--orange)] bg-[var(--orange-soft)] text-[var(--orange)]'
+        : 'border-[var(--line)] text-[var(--moss)]'
+    }`
+
   return (
     <AppShell
-      title="Clientes"
+      title="Clientes / Fornecedores"
       cta={podeGerir ? { label: '+ Cliente', to: '/clientes/novo' } : undefined}
     >
       {erro ? <p className="mb-3 font-semibold text-[#b42318]">{erro}</p> : null}
       <p className="mt-0 mb-3 text-sm text-[var(--muted)]">
-        Fee, contato e status.
+        Um cadastro pode ser cliente, fornecedor ou os dois.
         {podeGerir ? (
           <>
             {' '}
@@ -68,12 +82,25 @@ export default function ClientesPage() {
         ) : null}
       </p>
 
+      <div className="mb-3 flex flex-wrap gap-2" data-testid="filtro-papel">
+        <button type="button" className={filtroClass('')} onClick={() => setPapel('')}>
+          Todos
+        </button>
+        <button type="button" className={filtroClass('cliente')} onClick={() => setPapel('cliente')}>
+          Clientes
+        </button>
+        <button type="button" className={filtroClass('fornecedor')} onClick={() => setPapel('fornecedor')}>
+          Fornecedores
+        </button>
+      </div>
+
       <div className="overflow-auto rounded-[12px] border border-[var(--line)] bg-white" data-testid="lista-clientes">
-        <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+        <table className="w-full min-w-[720px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--line)] bg-[var(--moss-soft)]/50 text-xs font-extrabold tracking-wide uppercase text-[var(--muted)]">
-              <th className="px-4 py-3">Cliente</th>
-              <th className="px-4 py-3">Segmento</th>
+              <th className="px-4 py-3">Nome</th>
+              <th className="px-4 py-3">Papel</th>
+              <th className="px-4 py-3">Cidade</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Contato</th>
               <th className="px-4 py-3 text-right">Fee</th>
@@ -83,8 +110,8 @@ export default function ClientesPage() {
           <tbody>
             {clientes.length === 0 ? (
               <tr>
-                <td colSpan={podeGerir ? 6 : 5} className="px-4 py-10 text-center text-[var(--muted)]">
-                  Nenhum cliente ainda.
+                <td colSpan={podeGerir ? 7 : 6} className="px-4 py-10 text-center text-[var(--muted)]">
+                  Nenhum cadastro ainda.
                   {podeGerir ? ' Use + Cliente.' : null}
                 </td>
               </tr>
@@ -103,14 +130,23 @@ export default function ClientesPage() {
                       <span className="font-extrabold text-[var(--moss)]">{cliente.nome_fantasia}</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[var(--muted)]">{cliente.segmento || '—'}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-[var(--moss-soft)] px-2 py-0.5 text-xs font-bold text-[var(--moss)]">
+                      {rotuloPapel(cliente)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-[var(--muted)]">
+                    {cliente.cidade ? `${cliente.cidade}${cliente.uf ? `/${cliente.uf}` : ''}` : '—'}
+                  </td>
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-[var(--moss-soft)] px-2 py-0.5 text-xs font-bold text-[var(--moss)]">
                       {STATUS_LABEL[cliente.status] || cliente.status}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[var(--muted)]">{cliente.contato_nome || cliente.email || '—'}</td>
-                  <td className="px-4 py-3 text-right font-bold">{formatarBRL(cliente.fee_mensal)}</td>
+                  <td className="px-4 py-3 text-right font-bold">
+                    {cliente.eh_cliente ? formatarBRL(cliente.fee_mensal) : '—'}
+                  </td>
                   {podeGerir ? (
                     <td className="px-4 py-3 text-right">
                       <AcoesLista
@@ -130,7 +166,7 @@ export default function ClientesPage() {
       {alvo ? (
         <ConfirmarExcluir
           titulo={`Excluir ${alvo.nome_fantasia}?`}
-          texto="Só funciona se não houver tarefas ligadas a este cliente."
+          texto="Só funciona se não houver tarefas ligadas a este cadastro."
           confirmarLabel="Excluir cliente"
           processando={excluindo}
           onCancelar={() => setAlvo(null)}

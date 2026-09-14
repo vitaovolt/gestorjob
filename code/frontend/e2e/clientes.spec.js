@@ -10,7 +10,10 @@ test('CRUD de cliente na tela', async ({ page }) => {
 
   await page.getByRole('link', { name: '+ Cliente' }).click()
   await page.getByTestId('cliente-nome').fill('Studio Pixel')
+  await page.getByTestId('cliente-papel-fornecedor').check()
   await page.getByTestId('cliente-cnpj').fill('12ABC34501DE35')
+  await page.getByTestId('cliente-cidade').fill('Jaboticabal')
+  await page.getByTestId('cliente-uf').fill('SP')
   await expect(page.getByTestId('cliente-cnpj')).toHaveValue('12.ABC.345/01DE-35')
   await page.getByTestId('cliente-inicio-cal').fill('2026-08-14')
   await expect(page.getByTestId('cliente-inicio')).toHaveValue('14/08/2026')
@@ -21,6 +24,8 @@ test('CRUD de cliente na tela', async ({ page }) => {
 
   await expect(page.getByTestId('toast')).toContainText('Cliente criado')
   await expect(page.getByTestId('lista-clientes').getByText('Studio Pixel')).toBeVisible()
+  await expect(page.getByTestId('lista-clientes').locator('tr', { hasText: 'Studio Pixel' })).toContainText('Cliente e fornecedor')
+  await expect(page.getByTestId('lista-clientes').locator('tr', { hasText: 'Studio Pixel' })).toContainText('Jaboticabal/SP')
   await expect(editarNaLista(page, 'lista-clientes', 'Studio Pixel')).toBeVisible()
 
   await editarNaLista(page, 'lista-clientes', 'Studio Pixel').click()

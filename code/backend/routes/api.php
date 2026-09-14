@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AnexoController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CepController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\ColaboradorController;
 use App\Http\Controllers\Api\ComentarioController;
@@ -39,6 +40,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         Route::post('/empresas/{empresa}/convite', [EmpresaController::class, 'reenviarConvite']);
         Route::get('/empresa', [EmpresaController::class, 'show']);
 
+        Route::get('/cep/{cep}', [CepController::class, 'show'])->where('cep', '[0-9]{8}');
         Route::apiResource('clientes', ClienteController::class);
         Route::apiResource('servicos', ServicoController::class)->parameters(['servicos' => 'servico']);
 

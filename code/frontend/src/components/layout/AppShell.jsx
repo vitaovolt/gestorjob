@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ehSuperAdmin } from '../../utils/format'
+import LogoGestorJob from '../brand/LogoGestorJob.jsx'
 import NotificacoesBell from './NotificacoesBell.jsx'
 
 function navClass({ isActive }) {
@@ -61,9 +62,9 @@ export default function AppShell({ title, cta, children }) {
   return (
     <div className="flex min-h-screen">
       <aside className="flex w-[220px] shrink-0 flex-col bg-[var(--moss)] px-3 py-4 text-white">
-        <p className="px-2 text-[1.15rem] font-extrabold tracking-tight">
-          Gestor<span className="text-[var(--orange)]">Job</span>
-        </p>
+        <div className="px-1">
+          <LogoGestorJob variante="escuro" className="h-11 w-auto max-w-full" />
+        </div>
         <nav aria-label="Principal" className="mt-6 flex flex-col gap-1">
           {superAdmin ? (
             <NavLink to="/empresas" className={navClass}>
@@ -78,7 +79,7 @@ export default function AppShell({ title, cta, children }) {
                 Lista
               </NavLink>
               <NavLink to="/clientes" className={navClass}>
-                Clientes
+                Clientes / Fornecedores
               </NavLink>
               <NavLink to="/servicos" className={navClass}>
                 Serviços

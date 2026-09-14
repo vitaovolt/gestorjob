@@ -20,7 +20,10 @@ class StoreTarefaRequest extends FormRequest
         $empresaId = $this->user()?->empresa_id;
 
         return [
-            'cliente_id' => ['required', Rule::exists('clientes', 'id')->where('empresa_id', $empresaId)],
+            'cliente_id' => [
+                'required',
+                Rule::exists('clientes', 'id')->where('empresa_id', $empresaId)->where('eh_cliente', true),
+            ],
             'servico_id' => ['nullable', Rule::exists('servicos', 'id')->where('empresa_id', $empresaId)],
             'titulo' => ['required', 'string', 'max:255'],
             'prioridade' => ['sometimes', Rule::in(Tarefa::PRIORIDADES)],

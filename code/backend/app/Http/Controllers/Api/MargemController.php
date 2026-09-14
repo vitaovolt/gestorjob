@@ -23,6 +23,7 @@ class MargemController extends Controller
 
         $linhas = Cliente::query()
             ->ativos()
+            ->somenteClientes()
             ->orderBy('nome_fantasia')
             ->get()
             ->map(fn (Cliente $cliente) => $calcular->handle($cliente, $competencia))

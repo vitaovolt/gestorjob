@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { concluirWizard } from '../api/auth'
 import { getAuthToken } from '../api/client'
 import { createCliente, createColaborador, createServico } from '../api/dominio'
+import LogoGestorJob from '../components/brand/LogoGestorJob.jsx'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { maskMoneyBR, parseMoneyBR } from '../utils/masks'
@@ -150,9 +151,7 @@ export default function WizardPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-5 py-10" data-testid="wizard-root">
-      <h1 className="text-3xl font-extrabold tracking-tight text-[var(--moss)]">
-        Gestor<span className="text-[var(--orange)]">Job</span>
-      </h1>
+      <LogoGestorJob className="h-14 w-auto max-w-[240px]" />
       <p className="mt-1 text-sm text-[var(--muted)]">Onboarding · {user.empresa?.nome || 'sua agência'}</p>
 
       <div className="mt-6 flex flex-wrap gap-2" data-testid="wizard-passos">

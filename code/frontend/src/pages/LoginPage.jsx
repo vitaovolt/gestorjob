@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import LogoGestorJob from '../components/brand/LogoGestorJob.jsx'
 import { useAuth } from '../context/AuthContext'
 import { emailValido, normalizeEmail } from '../utils/masks'
 import { destinoInicial } from '../utils/format'
@@ -52,13 +53,8 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
-      <p className="m-0 text-xs font-extrabold tracking-[0.14em] uppercase text-[var(--moss)]">
-        Organize · Descomplique
-      </p>
-      <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-[var(--moss)]">
-        Gestor<span className="text-[var(--orange)]">Job</span>
-      </h1>
-      <p className="mt-2 text-[var(--muted)]">Entre com o e-mail da agência.</p>
+      <LogoGestorJob className="h-16 w-auto max-w-[280px]" />
+      <p className="mt-4 text-[var(--muted)]">Entre com o e-mail da agência.</p>
 
       <form
         onSubmit={onSubmit}

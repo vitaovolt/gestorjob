@@ -8,19 +8,23 @@ use App\Http\Requests\StoreClienteRequest;
 use App\Http\Requests\UpdateClienteRequest;
 use App\Models\Cliente;
 use App\Support\ApiResponse;
+use App\Support\Auditoria;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ClienteController extends Controller
 {
     use ApiResponse;
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Cliente::class);
 
         $clientes = Cliente::query()
             ->withCount('tarefas')
+            ->when($request->string('papel')->toString() === 'cliente', fn ($q) => $q->somenteClientes())
+            ->when($request->string('papel')->toString() === 'fornecedor', fn ($q) => $q->somenteFornecedores())
             ->orderBy('nome_fantasia')
             ->get();
 
@@ -30,8 +34,14 @@ class ClienteController extends Controller
     public function store(StoreClienteRequest $request): JsonResponse
     {
         $cliente = Cliente::query()->create($request->validated());
+        Auditoria::registrar(
+            'cliente.criar',
+            $cliente->rotuloPapel().' criado: '.$cliente->nome_fantasia,
+            $cliente,
+            ['nome_fantasia' => $cliente->nome_fantasia, 'papeis' => $this->papeis($cliente)],
+        );
 
-        return $this->ok($cliente, 'Cliente criado', 201);
+        return $this->ok($cliente, $cliente->rotuloPapel().' criado', 201);
     }
 
     public function show(Cliente $cliente): JsonResponse
@@ -44,8 +54,15 @@ class ClienteController extends Controller
     public function update(UpdateClienteRequest $request, Cliente $cliente): JsonResponse
     {
         $cliente->update($request->validated());
+        $cliente = $cliente->fresh();
+        Auditoria::registrar(
+            'cliente.atualizar',
+            $cliente->rotuloPapel().' atualizado: '.$cliente->nome_fantasia,
+            $cliente,
+            ['nome_fantasia' => $cliente->nome_fantasia, 'papeis' => $this->papeis($cliente)],
+        );
 
-        return $this->ok($cliente->fresh(), 'Cliente atualizado');
+        return $this->ok($cliente, $cliente->rotuloPapel().' atualizado');
     }
 
     public function destroy(Cliente $cliente, ExcluirCliente $excluirCliente): JsonResponse
@@ -62,6 +79,29 @@ class ClienteController extends Controller
             throw $e;
         }
 
-        return $this->ok(null, 'Cliente removido');
+        Auditoria::registrar(
+            'cliente.excluir',
+            'Cadastro removido: '.$cliente->nome_fantasia,
+            $cliente,
+            ['nome_fantasia' => $cliente->nome_fantasia],
+        );
+
+        return $this->ok(null, $cliente->rotuloPapel().' removido');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function papeis(Cliente $cliente): array
+    {
+        $papeis = [];
+        if ($cliente->eh_cliente) {
+            $papeis[] = 'cliente';
+        }
+        if ($cliente->eh_fornecedor) {
+            $papeis[] = 'fornecedor';
+        }
+
+        return $papeis;
     }
 }
